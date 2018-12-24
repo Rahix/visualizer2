@@ -1,0 +1,9 @@
+[package]
+authors = ["Rahix <rahix@rahix.de>"]
+edition = "2018"
+name = "vis-core"
+version = "0.1.0"
+
+[dependencies]
+apodize = "0.3.1"
+rustfft = "2.1.0"

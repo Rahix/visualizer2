@@ -6,4 +6,15 @@ version = "0.1.0"
 
 [dependencies]
 apodize = "0.3.1"
+env_logger = "0.6.0"
+ezconf = "0.3.0"
+log = "0.4.6"
 rustfft = "2.1.0"
+
+[dependencies.pulse-simple]
+optional = true
+version = "1.0.1"
+
+[features]
+default = ["pulseaudio"]
+pulseaudio = ["pulse-simple"]

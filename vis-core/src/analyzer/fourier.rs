@@ -74,9 +74,16 @@ impl FourierBuilder {
     }
 
     pub fn plan(&mut self) -> FourierAnalyzer {
-        let length = self.length.unwrap_or(1024);
-        let window = (self.window.unwrap_or(window::none))(length);
-        let downsample = self.downsample.unwrap_or(1);
+        let length = self
+            .length
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.fourier_length", 512));
+        let window = (self.window.unwrap_or_else(|| {
+            window::from_str(crate::CONFIG.get_or("audio.window", "none"))
+                .expect("Selected window type not found!")
+        }))(length);
+        let downsample = self
+            .downsample
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.downsample", 5));
 
         FourierAnalyzer::new(length, window, downsample)
     }
@@ -99,7 +106,7 @@ impl FourierAnalyzer {
 
         let fft = rustfft::FFTplanner::new(false).plan_fft(length);
 
-        FourierAnalyzer {
+        let fa = FourierAnalyzer {
             length,
             window,
             downsample,
@@ -108,10 +115,18 @@ impl FourierAnalyzer {
 
             input: [Vec::with_capacity(length), Vec::with_capacity(length)],
             output: vec![rustfft::num_complex::Complex::zero(); length],
-        }
+        };
+
+        log::debug!("FourierAnalyzer({:p}):", &fa);
+        log::debug!("    Fourier Length      = {:6}", length);
+        log::debug!("    Downsampling Factor = {:6}", downsample);
+
+        fa
     }
 
     pub fn analyze(&mut self, buf: &analyzer::SampleBuffer) {
+        log::trace!("FourierAnalyzer({:p}): Analyzing ...", &self);
+
         // Copy samples to left and right buffer
         self.input[0].clear();
         self.input[1].clear();

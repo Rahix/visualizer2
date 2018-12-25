@@ -46,14 +46,19 @@ impl SampleBuffer {
         }
     }
 
-    pub fn volume(&self) -> super::spectrum::SignalStrength {
-        use super::spectrum::SignalStrength;
+    pub fn volume(&self, length: f32) -> super::SignalStrength {
+        use super::SignalStrength;
 
         let lock = self.buf.lock().expect("Can't lock sample buffer!");
         let len = lock.len();
 
+        let div = (1.0 / length) as usize;
+
         (lock
             .iter()
+            // Only look at the last tenth of a second
+            .skip(len - self.rate / div)
+            // RMS
             .map(|s| ((s[0] + s[1]) / 2.0).powi(2) as SignalStrength)
             .sum::<SignalStrength>()
             / len as SignalStrength)

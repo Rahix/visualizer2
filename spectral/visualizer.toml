@@ -1,0 +1,5 @@
+[audio]
+window = "nuttall"
+
+[pulse]
+read_size = 16

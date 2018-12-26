@@ -1,0 +1,13 @@
+[package]
+authors = ["Rahix <rahix@rahix.de>"]
+edition = "2018"
+name = "spectral"
+version = "0.1.0"
+
+[dependencies]
+log = "0.4.6"
+sfml = "0.14.0"
+
+[dependencies.vis-core]
+optional = false
+path = "../vis-core"

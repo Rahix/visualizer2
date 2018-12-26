@@ -7,4 +7,6 @@ edition = "2018"
 [workspace]
 members = [
     "vis-core",
+    "spectral",
+    "beat-delay",
 ]

@@ -84,7 +84,7 @@ impl FourierBuilder {
             .length
             .unwrap_or_else(|| crate::CONFIG.get_or("audio.fourier_length", 512));
         let window = (self.window.unwrap_or_else(|| {
-            window::from_str(crate::CONFIG.get_or("audio.window", "none"))
+            window::from_str(&crate::CONFIG.get_or("audio.window", "none".to_string()))
                 .expect("Selected window type not found!")
         }))(length);
         let downsample = self
@@ -105,8 +105,8 @@ pub struct FourierAnalyzer {
     pub downsample: usize,
 
     rate: usize,
-    lowest: analyzer::Frequency,
-    hightest: analyzer::Frequency,
+    pub lowest: analyzer::Frequency,
+    pub hightest: analyzer::Frequency,
 
     fft: std::sync::Arc<rustfft::FFT<Sample>>,
 

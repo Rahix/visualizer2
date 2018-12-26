@@ -40,12 +40,14 @@ where
         }
     }
     pub fn iter<'a>(&'a mut self) -> FramesIter<'a, R, A> {
-        FramesIter {
+        let fi = FramesIter {
             buffer: self.recorder.sample_buffer().clone(),
             visualizer: self,
             start_time: time::Instant::now(),
             frame: 0,
-        }
+        };
+
+        fi
     }
 }
 

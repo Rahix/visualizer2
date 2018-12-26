@@ -1,6 +1,7 @@
-extern crate vis_core;
 extern crate log;
+extern crate vis_core;
 
+#[derive(Debug, Default)]
 pub struct AnalyzerResult {
     volume: f32,
     beat: f32,
@@ -22,26 +23,25 @@ fn main() {
 
     let mut spectrum = vis_core::analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0);
 
-    let mut frames = vis_core::Visualizer::new()
-        .analyzer(move |samples| {
-            vis_core::analyzer::average_spectrum(
-                &mut spectrum,
-                analyzer.analyze(samples, &mut spectra),
-            );
+    let mut frames = vis_core::Visualizer::new(Default::default(), move |samples| {
+        vis_core::analyzer::average_spectrum(
+            &mut spectrum,
+            analyzer.analyze(samples, &mut spectra),
+        );
 
-            AnalyzerResult {
-                volume: samples.volume(0.3),
-                beat: spectrum.slice(50.0, 100.0).max(),
-            }
-        })
-        .recorder(
-            vis_core::recorder::pulse::PulseBuilder::new()
-                .rate(8000)
-                .read_size(64)
-                .buffer_size(16000)
-                .build()
-        )
-        .frames();
+        AnalyzerResult {
+            volume: samples.volume(0.3),
+            beat: spectrum.slice(50.0, 100.0).max(),
+        }
+    })
+    .recorder(
+        vis_core::recorder::pulse::PulseBuilder::new()
+            .rate(8000)
+            .read_size(64)
+            .buffer_size(16000)
+            .build(),
+    )
+    .frames();
 
     for frame in frames.iter() {
         for _ in 0..(0.01 * frame.info.beat) as usize {

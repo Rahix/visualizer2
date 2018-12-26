@@ -197,8 +197,8 @@ impl<S: Storage> Spectrum<S> {
 
 pub fn average_spectrum<'a, S: Storage, SMut: StorageMut>(
     out: &'a mut Spectrum<SMut>,
-    spectra: &[Spectrum<S>]) -> &'a mut Spectrum<SMut>
-{
+    spectra: &[Spectrum<S>],
+) -> &'a mut Spectrum<SMut> {
     let num = spectra.len() as SignalStrength;
     let size = out.len();
 

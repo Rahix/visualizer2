@@ -44,10 +44,12 @@ fn main() {
     .frames();
 
     for frame in frames.iter() {
-        for _ in 0..(0.01 * frame.info.beat) as usize {
-            print!("#");
-        }
-        println!("");
+        frame.lock_info(|info| {
+            for _ in 0..(0.01 * info.beat) as usize {
+                print!("#");
+            }
+            println!("");
+        });
         std::thread::sleep_ms(30);
     }
 }

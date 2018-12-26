@@ -29,9 +29,6 @@ where
     }
 
     pub fn frames(self) -> crate::Frames<R, A> {
-        crate::Frames {
-            analyzer: self.analyzer,
-            recorder: self.recorder.unwrap_or_else(|| recorder::default()),
-        }
+        crate::Frames::from_vis(self)
     }
 }

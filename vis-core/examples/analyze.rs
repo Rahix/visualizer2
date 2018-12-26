@@ -13,9 +13,14 @@ fn main() {
         .window(vis_core::analyzer::window::nuttall)
         .plan();
 
+    let mut spectra = [
+        vis_core::analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0),
+        vis_core::analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0),
+    ];
+
     let mut frames = vis_core::Visualizer::new()
-        .analyzer(|samples| {
-            analyzer.analyze(samples);
+        .analyzer(move |samples| {
+            analyzer.analyze(samples, &mut spectra);
 
             AnalyzerResult {
                 volume: samples.volume(0.01),

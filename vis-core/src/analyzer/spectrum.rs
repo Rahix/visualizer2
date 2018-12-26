@@ -8,11 +8,12 @@ impl<T> Storage for T where T: std::ops::Deref<Target = [SignalStrength]> {}
 
 impl<T> StorageMut for T where T: Storage + std::ops::DerefMut {}
 
+#[derive(Debug, Clone)]
 pub struct Spectrum<S: Storage> {
-    buckets: S,
-    width: Frequency,
-    lowest: Frequency,
-    highest: Frequency,
+    pub buckets: S,
+    pub width: Frequency,
+    pub lowest: Frequency,
+    pub highest: Frequency,
 }
 
 impl<S: Storage> std::ops::Index<usize> for Spectrum<S> {
@@ -44,6 +45,17 @@ impl<S: StorageMut> std::ops::IndexMut<Frequency> for Spectrum<S> {
     }
 }
 
+impl Default for Spectrum<Vec<SignalStrength>> {
+    fn default() -> Self {
+        Spectrum {
+            buckets: vec![0.0],
+            width: 1.0,
+            lowest: 0.0,
+            highest: 0.0,
+        }
+    }
+}
+
 impl<S: Storage> Spectrum<S> {
     pub fn new(data: S, low: Frequency, high: Frequency) -> Spectrum<S> {
         Spectrum {
@@ -53,6 +65,12 @@ impl<S: Storage> Spectrum<S> {
 
             buckets: data,
         }
+    }
+
+    pub fn respan(&mut self, low: Frequency, high: Frequency) {
+        self.width = (high - low) / (self.buckets.len() as Frequency - 1.0);
+        self.lowest = low;
+        self.highest = high;
     }
 
     pub fn freq_to_id(&self, f: Frequency) -> usize {
@@ -186,6 +204,13 @@ mod tests {
             ((s.highest - s.lowest) / s.width).round() as usize,
             s.buckets.len() - 1
         );
+    }
+
+    #[test]
+    fn test_default() {
+        let def: Spectrum<_> = Default::default();
+
+        check_integrity(&def);
     }
 
     fn do_tests<F: FnMut(usize, f32, f32, f32, f32, Spectrum<Vec<f32>>)>(mut f: F) {

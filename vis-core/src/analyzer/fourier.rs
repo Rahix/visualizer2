@@ -91,8 +91,9 @@ impl FourierBuilder {
 
 pub struct FourierAnalyzer {
     length: usize,
+    pub buckets: usize,
     window: Vec<Sample>,
-    downsample: usize,
+    pub downsample: usize,
 
     fft: std::sync::Arc<rustfft::FFT<Sample>>,
 
@@ -105,9 +106,11 @@ impl FourierAnalyzer {
         use rustfft::num_traits::Zero;
 
         let fft = rustfft::FFTplanner::new(false).plan_fft(length);
+        let buckets = length / 2;
 
         let fa = FourierAnalyzer {
             length,
+            buckets,
             window,
             downsample,
 
@@ -120,11 +123,16 @@ impl FourierAnalyzer {
         log::debug!("FourierAnalyzer({:p}):", &fa);
         log::debug!("    Fourier Length      = {:6}", length);
         log::debug!("    Downsampling Factor = {:6}", downsample);
+        log::debug!("    Buckets             = {:6}", buckets);
 
         fa
     }
 
-    pub fn analyze(&mut self, buf: &analyzer::SampleBuffer) {
+    pub fn analyze<'a, S: analyzer::spectrum::StorageMut>(
+        &mut self,
+        buf: &analyzer::SampleBuffer,
+        spectra: &'a mut [analyzer::Spectrum<S>; 2],
+    ) -> &'a mut [analyzer::Spectrum<S>; 2] {
         log::trace!("FourierAnalyzer({:p}): Analyzing ...", &self);
 
         // Copy samples to left and right buffer
@@ -141,8 +149,22 @@ impl FourierAnalyzer {
         debug_assert_eq!(self.input[0].len(), self.window.len());
         debug_assert_eq!(self.input[1].len(), self.window.len());
 
+        debug_assert_eq!(spectra[0].len(), self.buckets);
+        debug_assert_eq!(spectra[1].len(), self.buckets);
+
         self.fft.process(&mut self.input[0], &mut self.output);
+        spectra[0].respan(0.0, 1.0);
+        for (i, x) in self.output.iter().take(self.buckets).enumerate() {
+            spectra[0][i] = x.norm_sqr();
+        }
+
         self.fft.process(&mut self.input[1], &mut self.output);
+        spectra[1].respan(0.0, 1.0);
+        for (i, x) in self.output.iter().take(self.buckets).enumerate() {
+            spectra[1][i] = x.norm_sqr();
+        }
+
+        spectra
     }
 }
 
@@ -171,6 +193,9 @@ mod tests {
 
         buf.push(&[[1.0; 2]; 1024]);
 
-        analyzer.analyze(&buf);
+        let mut out_l = crate::analyzer::Spectrum::new(vec![0.0; 256], 0.0, 1.0);
+        let mut out_r = crate::analyzer::Spectrum::new(vec![0.0; 256], 0.0, 1.0);
+
+        analyzer.analyze(&buf, &mut [out_l, out_r]);
     }
 }

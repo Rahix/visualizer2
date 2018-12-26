@@ -67,7 +67,7 @@ impl<S: Storage> Spectrum<S> {
         }
     }
 
-    pub fn respan(&mut self, low: Frequency, high: Frequency) {
+    fn respan(&mut self, low: Frequency, high: Frequency) {
         self.width = (high - low) / (self.buckets.len() as Frequency - 1.0);
         self.lowest = low;
         self.highest = high;
@@ -94,6 +94,15 @@ impl<S: Storage> Spectrum<S> {
 
     pub fn len(&self) -> usize {
         self.buckets.len()
+    }
+
+    pub fn as_ref<'a>(&'a self) -> Spectrum<&'a [SignalStrength]> {
+        Spectrum {
+            buckets: &self.buckets,
+            width: self.width,
+            lowest: self.lowest,
+            highest: self.highest,
+        }
     }
 
     pub fn max(&self) -> SignalStrength {
@@ -195,30 +204,45 @@ impl<S: Storage> Spectrum<S> {
     }
 }
 
+impl<S: StorageMut> Spectrum<S> {
+    pub fn iter_mut<'a>(&'a mut self) -> std::slice::IterMut<'a, SignalStrength> {
+        self.buckets.iter_mut()
+    }
+}
+
 pub fn average_spectrum<'a, S: Storage, SMut: StorageMut>(
     out: &'a mut Spectrum<SMut>,
     spectra: &[Spectrum<S>],
-) -> &'a mut Spectrum<SMut> {
+) -> &'a Spectrum<SMut> {
+    let buffer = &mut out.buckets;
+
     let num = spectra.len() as SignalStrength;
-    let size = out.len();
+    debug_assert!(num > 0.0);
+
+    let buckets = buffer.len();
+    let lowest = spectra[0].lowest;
+    let highest = spectra[0].highest;
 
     // Clear output
-    for b in out.buckets.iter_mut() {
+    for b in buffer.iter_mut() {
         *b = 0.0;
     }
 
     for s in spectra.iter() {
-        debug_assert_eq!(s.len(), size);
-        for (b, x) in out.buckets.iter_mut().zip(s.buckets.iter()) {
+        debug_assert_eq!(s.len(), buckets);
+        debug_assert_eq!(s.lowest, lowest);
+        debug_assert_eq!(s.highest, highest);
+
+        for (b, x) in buffer.iter_mut().zip(s.buckets.iter()) {
             *b += x;
         }
     }
 
-    for b in out.buckets.iter_mut() {
+    for b in buffer.iter_mut() {
         *b /= num;
     }
 
-    out.respan(spectra[0].lowest, spectra[0].highest);
+    out.respan(lowest, highest);
 
     out
 }

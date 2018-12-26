@@ -17,11 +17,6 @@ fn main() {
         .window(vis_core::analyzer::window::nuttall)
         .plan();
 
-    let mut spectra = [
-        vis_core::analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0),
-        vis_core::analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0),
-    ];
-
     let spectrum = vis_core::analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0);
 
     let mut frames = vis_core::Visualizer::new(
@@ -32,11 +27,11 @@ fn main() {
         move |info, samples| {
             vis_core::analyzer::average_spectrum(
                 &mut info.spectrum,
-                analyzer.analyze(samples, &mut spectra),
+                &analyzer.analyze(samples),
             );
 
-            info.volume = samples.volume(0.3);
-            info.beat = info.spectrum.slice(50.0, 100.0).max();
+            info.volume = samples.volume(0.3) * 400.0;
+            info.beat = info.spectrum.slice(50.0, 100.0).max() * 0.01;
             info
         },
     )
@@ -51,7 +46,7 @@ fn main() {
 
     for frame in frames.iter() {
         frame.lock_info(|info| {
-            for _ in 0..(0.01 * info.beat) as usize {
+            for _ in 0..info.volume as usize {
                 print!("#");
             }
             println!("");

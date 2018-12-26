@@ -28,7 +28,7 @@ impl PulseBuilder {
         self
     }
 
-    pub fn build(&mut self) -> PulseRecorder {
+    pub fn create(&mut self) -> PulseRecorder {
         let rate = self
             .rate
             .unwrap_or_else(|| crate::CONFIG.get_or("audio.rate", 8000));
@@ -42,6 +42,10 @@ impl PulseBuilder {
             .unwrap_or_else(|| crate::CONFIG.get_or("pulse.buffer", 8000));
 
         PulseRecorder::new(rate, read_size, buffer_size)
+    }
+
+    pub fn build(&mut self) -> Box<dyn super::Recorder> {
+        Box::new(self.create())
     }
 }
 

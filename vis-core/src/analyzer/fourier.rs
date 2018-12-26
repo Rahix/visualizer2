@@ -135,6 +135,10 @@ impl FourierAnalyzer {
     ) -> &'a mut [analyzer::Spectrum<S>; 2] {
         log::trace!("FourierAnalyzer({:p}): Analyzing ...", &self);
 
+        let downsampled_rate = buf.rate as f32 / self.downsample as f32;
+        let lower = downsampled_rate / self.length as f32;
+        let upper = downsampled_rate / 2.0;
+
         // Copy samples to left and right buffer
         self.input[0].clear();
         self.input[1].clear();
@@ -153,13 +157,13 @@ impl FourierAnalyzer {
         debug_assert_eq!(spectra[1].len(), self.buckets);
 
         self.fft.process(&mut self.input[0], &mut self.output);
-        spectra[0].respan(0.0, 1.0);
+        spectra[0].respan(lower, upper);
         for (i, x) in self.output.iter().take(self.buckets).enumerate() {
             spectra[0][i] = x.norm_sqr();
         }
 
         self.fft.process(&mut self.input[1], &mut self.output);
-        spectra[1].respan(0.0, 1.0);
+        spectra[1].respan(lower, upper);
         for (i, x) in self.output.iter().take(self.buckets).enumerate() {
             spectra[1][i] = x.norm_sqr();
         }

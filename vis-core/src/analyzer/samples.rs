@@ -8,7 +8,7 @@ type _SampleBuf = sync::Arc<sync::Mutex<collections::VecDeque<[Sample; 2]>>>;
 #[derive(Debug, Clone)]
 pub struct SampleBuffer {
     buf: _SampleBuf,
-    rate: usize,
+    pub rate: usize,
 }
 
 impl SampleBuffer {

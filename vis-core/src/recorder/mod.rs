@@ -18,7 +18,7 @@ pub trait Recorder: std::fmt::Debug {
 
 pub fn from_str(name: &str) -> Option<Box<dyn Recorder>> {
     match name {
-        "pulse" => Some(Box::new(pulse::PulseBuilder::new().build())),
+        "pulse" => Some(pulse::PulseBuilder::new().build()),
         _ => None,
     }
 }

@@ -195,6 +195,34 @@ impl<S: Storage> Spectrum<S> {
     }
 }
 
+pub fn average_spectrum<'a, S: Storage, SMut: StorageMut>(
+    out: &'a mut Spectrum<SMut>,
+    spectra: &[Spectrum<S>]) -> &'a mut Spectrum<SMut>
+{
+    let num = spectra.len() as SignalStrength;
+    let size = out.len();
+
+    // Clear output
+    for b in out.buckets.iter_mut() {
+        *b = 0.0;
+    }
+
+    for s in spectra.iter() {
+        debug_assert_eq!(s.len(), size);
+        for (b, x) in out.buckets.iter_mut().zip(s.buckets.iter()) {
+            *b += x;
+        }
+    }
+
+    for b in out.buckets.iter_mut() {
+        *b /= num;
+    }
+
+    out.respan(spectra[0].lowest, spectra[0].highest);
+
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

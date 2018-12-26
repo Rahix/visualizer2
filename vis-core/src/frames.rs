@@ -21,7 +21,7 @@ impl<R> Frame<R> {
 #[derive(Debug)]
 pub struct Frames<R, A>
 where
-    A: FnMut(&analyzer::SampleBuffer) -> R,
+    for<'r> A: FnMut(&'r mut R, &analyzer::SampleBuffer) -> &'r mut R,
 {
     info: sync::Arc<sync::Mutex<R>>,
     analyzer: A,
@@ -30,7 +30,7 @@ where
 
 impl<R, A> Frames<R, A>
 where
-    A: FnMut(&analyzer::SampleBuffer) -> R,
+    for<'r> A: FnMut(&'r mut R, &analyzer::SampleBuffer) -> &'r mut R,
 {
     pub fn from_vis(vis: crate::Visualizer<R, A>) -> Frames<R, A> {
         Frames {
@@ -52,7 +52,7 @@ where
 #[derive(Debug)]
 pub struct FramesIter<'a, R, A>
 where
-    A: FnMut(&analyzer::SampleBuffer) -> R,
+    for<'r> A: FnMut(&'r mut R, &analyzer::SampleBuffer) -> &'r mut R,
 {
     visualizer: &'a mut Frames<R, A>,
     buffer: analyzer::SampleBuffer,
@@ -62,15 +62,12 @@ where
 
 impl<'a, R, A> Iterator for FramesIter<'a, R, A>
 where
-    A: FnMut(&analyzer::SampleBuffer) -> R,
+    for<'r> A: FnMut(&'r mut R, &analyzer::SampleBuffer) -> &'r mut R,
 {
     type Item = Frame<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        {
-            let mut lock = self.visualizer.info.lock().unwrap();
-            *lock = (self.visualizer.analyzer)(&self.buffer);
-        }
+        (self.visualizer.analyzer)(&mut self.visualizer.info.lock().unwrap(), &self.buffer);
 
         let f = Frame {
             time: crate::helpers::time(self.start_time),

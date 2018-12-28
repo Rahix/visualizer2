@@ -1,0 +1,16 @@
+[package]
+authors = ["Rahix <rahix@rahix.de>"]
+edition = "2018"
+name = "noambition"
+version = "0.1.0"
+
+[dependencies]
+glium = "0.22.0"
+image = "0.20.1"
+log = "0.4.6"
+nalgebra = "0.16.9"
+rand = "0.6.0-pre.1"
+
+[dependencies.vis-core]
+optional = false
+path = "../vis-core"

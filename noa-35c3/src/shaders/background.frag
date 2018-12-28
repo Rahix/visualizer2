@@ -16,7 +16,8 @@ vec3 background() {
     float radius = sqrt(p.x * p.x + p.y * p.y);
     float t = smoothstep(0.4, 0.38, radius * (last_beat + 1.0));
     // float t = smoothstep(0.1 + beat, 0.08 + beat, radius);
-    return vec3(0.915586, 0.704283, 0.214133) * ((radius * 2.0 + 0.5)) * t + vec3(0.012057, 0.000554, 0.119093) * (1.0 - t) * (1.0 / radius);
+    vec3 color = vec3(0.953495, 0.476371, 0.000000);
+    return color * ((radius * 2.0 + 0.5)) * t + vec3(0.0) * (1.0 - t) * (1.0 / radius);
 }
 
 void main() {

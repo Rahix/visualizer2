@@ -44,6 +44,8 @@ fn main() {
     )
     .frames();
 
+    frames.detach_analyzer();
+
     for frame in frames.iter() {
         frame.lock_info(|info| {
             for _ in 0..info.volume as usize {

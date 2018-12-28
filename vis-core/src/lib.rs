@@ -22,5 +22,11 @@ pub fn default_config() {
 }
 
 pub fn default_log() {
+    #[cfg(not(debug_assertions))]
     env_logger::init();
+
+    #[cfg(debug_assertions)]
+    env_logger::Builder::from_default_env()
+        .filter_level(log::LevelFilter::Debug)
+        .init();
 }

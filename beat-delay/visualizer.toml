@@ -2,4 +2,4 @@
 window = "nuttall"
 
 [pulse]
-read_size = 64
+read_size = 8

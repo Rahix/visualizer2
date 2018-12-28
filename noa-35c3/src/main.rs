@@ -332,6 +332,13 @@ fn main() {
 
     // }}}
 
+    // Image {{{
+    let image = image::load(std::io::Cursor::new(&include_bytes!("logo.png")[..]), image::PNG).unwrap().to_rgba();
+    let image_dims = image.dimensions();
+    let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dims);
+    let c3_texture = glium::texture::CompressedSrgbTexture2d::new(&display, image).unwrap();
+    // }}}
+
     let mut previous_time = 0.0;
     let mut previous_offset = 0.0;
     let mut rolling_volume = 0.0;
@@ -536,6 +543,7 @@ fn main() {
         let (fa, fb) = (fb, fa);
         let ua = uniform! {
             previous: tex1.sampled().wrap_function(glium::uniforms::SamplerWrapFunction::Mirror),
+            c3: c3_texture.sampled(),
             aspect: aspect,
             time: frame.time,
             volume: volume,
@@ -544,6 +552,7 @@ fn main() {
         };
         let ub = uniform! {
             previous: tex2.sampled().wrap_function(glium::uniforms::SamplerWrapFunction::Mirror),
+            c3: c3_texture.sampled(),
             aspect: aspect,
             time: frame.time,
             volume: volume,

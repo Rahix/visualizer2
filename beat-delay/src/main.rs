@@ -16,6 +16,10 @@ fn main() {
         .plan();
 
     let mut avg = analyzer::Spectrum::new(vec![0.0; spectralizer.buckets], 0.0, 1.0);
+    let mut beat = analyzer::BeatBuilder::new()
+        .decay(1000.0)
+        .trigger(0.5)
+        .build();
 
     let start = std::time::Instant::now();
     let mut last_volume = 0.0;
@@ -33,26 +37,20 @@ fn main() {
                 &spectralizer.analyze(samples),
             );
 
-            let volume = avg.max();
-            info.volume = volume;
-            let delta = volume - last_volume;
+            let isbeat = beat.detect(&avg);
 
-            if delta > 0.0 && last_delta < 0.0 && last_volume > (info.beat_volume * 0.6) {
+            if isbeat {
                 info.beat = true;
-                info.beat_volume = last_volume;
+                info.beat_volume = beat.last_volume();
             }
-
-            last_volume = volume;
-            if delta != 0.0 {
-                last_delta = delta;
-            }
+            info.volume = beat.last_volume();
 
             info
         },
     )
     .frames();
 
-    // frames.detach_analyzer();
+    frames.detach_analyzer();
 
     'main: for frame in frames.iter() {
         log::trace!("Frame: {:7}@{:.3}", frame.frame, frame.time);
@@ -60,10 +58,21 @@ fn main() {
         frame.lock_info(|info| {
             if info.beat {
                 println!("Beat@{:.3}: {:7.3}", frame.time, info.beat_volume);
+                // for _ in 0..(info.beat_volume * 100.0) as usize {
+                //     print!("#");
+                // }
+                // println!("");
             }
             info.beat = false;
+
+            if false {
+                for _ in 0..(info.volume * 100.0) as usize {
+                    print!("-");
+                }
+                println!("");
+            }
         });
 
-        std::thread::sleep_ms(1);
+        std::thread::sleep_ms(30);
     }
 }

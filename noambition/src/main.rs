@@ -1,11 +1,8 @@
 #[macro_use]
 extern crate log;
-extern crate vis_core;
 #[macro_use]
 extern crate glium;
 extern crate nalgebra as na;
-extern crate rand;
-extern crate image;
 
 use glium::glutin;
 use vis_core::analyzer;
@@ -79,7 +76,7 @@ fn main() {
             .trigger(0.55)
             .build();
 
-        let mut analyzer = analyzer::FourierBuilder::new().plan();
+        let analyzer = analyzer::FourierBuilder::new().plan();
 
         vis_core::Visualizer::new(
             VisInfo {
@@ -295,7 +292,7 @@ fn main() {
         }
 
         let mut colors_buf = [[1.0, 0.0, 0.0, 1.0]; 32];
-        for (mut buf, color) in colors_buf.iter_mut().zip(colors.iter()) {
+        for (buf, color) in colors_buf.iter_mut().zip(colors.iter()) {
             *buf = *color;
         }
         let lines_colors = glium::uniforms::UniformBuffer::persistent(
@@ -313,7 +310,7 @@ fn main() {
     // Points {{{
     let points_colors = {
         let mut colors_buf = [[1.0, 0.0, 0.0, 1.0]; 32];
-        for (mut buf, color) in colors_buf.iter_mut().zip(colors.iter()) {
+        for (buf, color) in colors_buf.iter_mut().zip(colors.iter()) {
             *buf = *color;
         }
         glium::uniforms::UniformBuffer::persistent(
@@ -357,7 +354,7 @@ fn main() {
             }
 
             let notes_spectrum = info.spectrum.slice(220.0, 660.0).fill_buckets(&mut notes_buf[..]);
-            for (mut n, s) in notes_rolling_buf.iter_mut().zip(notes_spectrum.iter()) {
+            for (n, s) in notes_rolling_buf.iter_mut().zip(notes_spectrum.iter()) {
                 *n = (*n * (note_roll_size - 1.0) + s) / note_roll_size;
             }
             let notes_rolling_spectrum = vis_core::analyzer::Spectrum::new(
@@ -397,7 +394,7 @@ fn main() {
         // Color Notes {{{
         {
             let mut color_buf = lines_colors.map();
-            for mut color in color_buf.iter_mut() {
+            for color in color_buf.iter_mut() {
                 color[3] = 0.05;
             }
             for (f, _) in maxima.iter().take(nmax) {

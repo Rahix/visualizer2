@@ -58,6 +58,7 @@ where
             .spawn(move || {
                 loop {
                     analyzer(&mut info.lock().unwrap(), &buffer);
+                    // Todo, properly implement this detacher
                     std::thread::sleep_ms(1);
                 }
             }).unwrap();

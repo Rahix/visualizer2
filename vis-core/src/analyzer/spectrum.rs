@@ -199,7 +199,7 @@ impl<S: Storage> Spectrum<S> {
             });
 
         let mut num = 0;
-        for (mut b, m) in buffer.iter_mut().zip(maxima_iter) {
+        for (b, m) in buffer.iter_mut().zip(maxima_iter) {
             *b = m;
             num += 1;
         }

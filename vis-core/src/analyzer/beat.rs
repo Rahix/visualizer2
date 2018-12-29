@@ -2,7 +2,6 @@ use crate::analyzer;
 
 #[derive(Debug, Default)]
 pub struct BeatBuilder {
-    pub range: Option<(analyzer::Frequency, analyzer::Frequency)>,
     pub decay: Option<analyzer::SignalStrength>,
     pub trigger: Option<analyzer::SignalStrength>,
 }
@@ -10,11 +9,6 @@ pub struct BeatBuilder {
 impl BeatBuilder {
     pub fn new() -> BeatBuilder {
         Default::default()
-    }
-
-    pub fn range(&mut self, low: analyzer::Frequency, high: analyzer::Frequency) -> &mut BeatBuilder {
-        self.range = Some((low, high));
-        self
     }
 
     pub fn decay(&mut self, decay: analyzer::SignalStrength) -> &mut BeatBuilder {
@@ -33,8 +27,6 @@ impl BeatBuilder {
 }
 
 pub struct BeatDetector {
-    low: analyzer::Frequency,
-    high: analyzer::Frequency,
     decay: analyzer::Frequency,
     trigger: analyzer::Frequency,
 
@@ -48,10 +40,7 @@ pub struct BeatDetector {
 
 impl BeatDetector {
     pub fn from_builder(build: &BeatBuilder) -> BeatDetector {
-        let (low, high) = build.range.unwrap_or((50.0, 100.0));
         BeatDetector {
-            low,
-            high,
             decay: 1.0 - 1.0 / build.decay.unwrap_or(1000.0),
             trigger: build.trigger.unwrap_or(0.5),
 

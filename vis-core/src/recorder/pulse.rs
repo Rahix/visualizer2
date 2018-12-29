@@ -99,7 +99,7 @@ impl super::Recorder for PulseRecorder {
         &self.buffer
     }
 
-    fn sync(&mut self, time: f32) -> bool {
+    fn sync(&mut self, _time: f32) -> bool {
         true
     }
 }

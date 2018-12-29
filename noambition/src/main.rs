@@ -60,6 +60,7 @@ pub struct VisInfo {
     beat: bool,
     beat_volume: f32,
     volume: f32,
+    analyzer: analyzer::FourierAnalyzer,
     spectrum: analyzer::Spectrum<Vec<f32>>,
 }
 
@@ -78,14 +79,15 @@ fn main() {
             .trigger(0.55)
             .build();
 
-        let mut spectralizer = analyzer::FourierBuilder::new().plan();
+        let mut analyzer = analyzer::FourierBuilder::new().plan();
 
         vis_core::Visualizer::new(
             VisInfo {
                 beat: false,
                 beat_volume: 0.0,
                 volume: 0.0,
-                spectrum: analyzer::Spectrum::new(vec![0.0; spectralizer.buckets], 0.0, 1.0),
+                spectrum: analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0),
+                analyzer,
             },
             move |info, samples| {
                 analyzer::average_spectrum(
@@ -99,7 +101,7 @@ fn main() {
 
                 analyzer::average_spectrum(
                     &mut info.spectrum,
-                    &spectralizer.analyze(&samples),
+                    &info.analyzer.analyze(&samples),
                 );
 
                 info
@@ -345,6 +347,7 @@ fn main() {
         let delta = frame.time - previous_time;
         trace!("Delta: {}s", delta);
 
+        // Audio Info Retrieval {{{
         let (volume, nmax, maxima, notes_rolling_spectrum, base_volume) = frame.lock_info(|info| {
             rolling_volume = info.volume.max(rolling_volume * slowdown);
 
@@ -367,6 +370,7 @@ fn main() {
 
             (info.volume, nmax, maxima, notes_rolling_spectrum, info.beat_volume)
         });
+        // }}}
 
         // GL Matrices {{{
         let view = na::Matrix4::look_at_rh(
@@ -423,30 +427,23 @@ fn main() {
             }
 
             // Write spectral information
-            {
-                // TODO: Use left and right info
-                let left = frame.lock_info(|info|
-                    info.spectrum.slice(100.0, 800.0).fill_buckets(&mut row_spectrum[..])
-                );
+            frame.lock_info(|info| {
+                let left = info.analyzer.left().slice(100.0, 800.0).fill_buckets(&mut row_spectrum[..]);
                 let row_offset = nrow * write_row;
                 let max = left.max();
                 for (i, v) in left.iter().enumerate() {
                     lines_buf[row_offset + i * 2 + 1].position[2] = base_height / 2.0 + v / max * ampli_top;
                     lines_buf[row_offset + i * 2].position[2] = - base_height / 2.0 - v / max * ampli_bottom;
                 }
-            }
 
-            {
-                let right = frame.lock_info(|info|
-                    info.spectrum.slice(100.0, 800.0).fill_buckets(&mut row_spectrum[..])
-                );
+                let right = info.analyzer.right().slice(100.0, 800.0).fill_buckets(&mut row_spectrum[..]);
                 let row_offset = nrow * write_row + cols * 2;
                 let max = right.max();
                 for (i, v) in right.iter().enumerate() {
                     lines_buf[row_offset + i * 2 + 1].position[2] = base_height / 2.0 + v / max * ampli_top;
                     lines_buf[row_offset + i * 2].position[2] = - base_height / 2.0 - v / max * ampli_bottom;
                 }
-            }
+            });
 
             write_row = (write_row + 1) % rows;
         }

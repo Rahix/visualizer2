@@ -114,6 +114,7 @@ pub struct FourierAnalyzer {
     output: Vec<rustfft::num_complex::Complex<Sample>>,
 
     spectra: [analyzer::Spectrum<Vec<analyzer::SignalStrength>>; 2],
+    average: analyzer::Spectrum<Vec<analyzer::SignalStrength>>,
 }
 
 impl FourierAnalyzer {
@@ -146,6 +147,7 @@ impl FourierAnalyzer {
                 analyzer::Spectrum::new(vec![0.0; buckets], lowest, hightest),
                 analyzer::Spectrum::new(vec![0.0; buckets], lowest, hightest),
             ],
+            average: analyzer::Spectrum::new(vec![0.0; buckets], lowest, hightest),
         };
 
         log::debug!("FourierAnalyzer({:p}):", &fa);
@@ -199,6 +201,23 @@ impl FourierAnalyzer {
             self.spectra[0].as_ref(),
             self.spectra[1].as_ref(),
         ]
+    }
+
+    pub fn left(&self) -> analyzer::Spectrum<&[analyzer::SignalStrength]> {
+        self.spectra[0].as_ref()
+    }
+
+    pub fn right(&self) -> analyzer::Spectrum<&[analyzer::SignalStrength]> {
+        self.spectra[1].as_ref()
+    }
+
+    pub fn average(&mut self) -> analyzer::Spectrum<&[analyzer::SignalStrength]> {
+        analyzer::average_spectrum(
+            &mut self.average,
+            &self.spectra,
+        );
+
+        self.average.as_ref()
     }
 }
 

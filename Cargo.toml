@@ -8,6 +8,5 @@ edition = "2018"
 members = [
     "vis-core",
     "spectral",
-    "beat-delay",
     "noambition",
 ]

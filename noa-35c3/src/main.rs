@@ -219,7 +219,7 @@ fn main() {
         shader_program!(&display, "shaders/pp.vert", "shaders/background.frag");
     // let fxaa_program = shader_program!(&display, "shaders/pp.vert", "shaders/fxaa.frag");
     // let bokeh_program = shader_program!(&display, "shaders/pp.vert", "shaders/bokeh.frag");
-    // let color_program = shader_program!(&display, "shaders/pp.vert", "shaders/color.frag");
+    let color_program = shader_program!(&display, "shaders/pp.vert", "shaders/color.frag");
     // }}}
 
     // Buffers {{{
@@ -560,14 +560,9 @@ fn main() {
             beat: beat_rolling,
         };
 
-        fa.draw(
-            &quad_verts,
-            &quad_inds,
-            &background_program,
-            &ua,
-            &draw_params,
-        )
-        .unwrap();
+        fa.draw(&quad_verts, &quad_inds, &background_program, &ua, &draw_params).unwrap();
+        let (fa, ua, fb, ub) = (fb, ub, fa, ua);
+        fa.draw(&quad_verts, &quad_inds, &color_program, &ua, &draw_params).unwrap();
         #[allow(unused_variables)]
         let (fa, ua, fb, ub) = (fb, ub, fa, ua);
         // }}}

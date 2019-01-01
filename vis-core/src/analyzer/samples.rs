@@ -3,7 +3,7 @@ use std::sync;
 
 pub type Sample = f32;
 
-type _SampleBuf = sync::Arc<sync::Mutex<collections::VecDeque<[Sample; 2]>>>;
+type _SampleBuf = sync::Arc<parking_lot::Mutex<collections::VecDeque<[Sample; 2]>>>;
 
 #[derive(Debug, Clone)]
 pub struct SampleBuffer {
@@ -16,13 +16,13 @@ impl SampleBuffer {
         let buf = collections::VecDeque::from(vec![[0.0; 2]; size]);
 
         SampleBuffer {
-            buf: sync::Arc::new(sync::Mutex::new(buf)),
+            buf: sync::Arc::new(parking_lot::Mutex::new(buf)),
             rate,
         }
     }
 
     pub fn push(&self, new: &[[Sample; 2]]) {
-        let mut lock = self.buf.lock().expect("Can't lock sample buffer!");
+        let mut lock = self.buf.lock();
 
         #[cfg(debug_assertions)]
         let debug_size = lock.len();
@@ -37,7 +37,7 @@ impl SampleBuffer {
     }
 
     pub fn iter<'a>(&'a self, size: usize, downsample: usize) -> SampleIterator<'a> {
-        let lock = self.buf.lock().expect("Can't lock sample buffer!");
+        let lock = self.buf.lock();
 
         SampleIterator {
             index: lock.len() - (size * downsample),
@@ -49,7 +49,7 @@ impl SampleBuffer {
     pub fn volume(&self, length: f32) -> super::SignalStrength {
         use super::SignalStrength;
 
-        let lock = self.buf.lock().expect("Can't lock sample buffer!");
+        let lock = self.buf.lock();
         let len = lock.len();
 
         let div = (1.0 / length) as usize;
@@ -67,7 +67,7 @@ impl SampleBuffer {
 }
 
 pub struct SampleIterator<'a> {
-    buf: sync::MutexGuard<'a, collections::VecDeque<[Sample; 2]>>,
+    buf: parking_lot::MutexGuard<'a, collections::VecDeque<[Sample; 2]>>,
     index: usize,
     downsample: usize,
 }

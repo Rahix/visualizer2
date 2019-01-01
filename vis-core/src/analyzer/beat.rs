@@ -57,7 +57,10 @@ impl BeatDetector {
         self.last_volume
     }
 
-    pub fn detect<S: analyzer::spectrum::Storage>(&mut self, spectrum: &analyzer::Spectrum<S>) -> bool {
+    pub fn detect<S: analyzer::spectrum::Storage>(
+        &mut self,
+        spectrum: &analyzer::Spectrum<S>,
+    ) -> bool {
         let volume = spectrum.mean();
         // Decay beat_delta to allow quieter beats to be detected
         self.last_beat_delta = self.last_beat_delta * self.decay;

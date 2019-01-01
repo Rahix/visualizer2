@@ -114,9 +114,7 @@ impl<S: Storage> Spectrum<S> {
     }
 
     pub fn mean(&self) -> SignalStrength {
-        self.buckets
-            .iter()
-            .sum::<SignalStrength>() / self.len() as f32
+        self.buckets.iter().sum::<SignalStrength>() / self.len() as f32
     }
 
     pub fn slice<'a>(&'a self, low: Frequency, high: Frequency) -> Spectrum<&'a [SignalStrength]> {

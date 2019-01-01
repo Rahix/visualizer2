@@ -1,6 +1,5 @@
 use crate::{analyzer, recorder};
-use std::{time, rc, cell};
-
+use std::{cell, rc, time};
 
 #[derive(Debug)]
 pub struct Frame<R: Send> {
@@ -62,7 +61,8 @@ where
                     // Todo, properly implement this detacher
                     std::thread::sleep_ms(1);
                 }
-            }).unwrap();
+            })
+            .unwrap();
     }
 
     pub fn iter<'a>(&'a mut self) -> FramesIter<'a, R, A> {

@@ -197,10 +197,7 @@ impl FourierAnalyzer {
             *s = o.norm_sqr();
         }
 
-        [
-            self.spectra[0].as_ref(),
-            self.spectra[1].as_ref(),
-        ]
+        [self.spectra[0].as_ref(), self.spectra[1].as_ref()]
     }
 
     pub fn left(&self) -> analyzer::Spectrum<&[analyzer::SignalStrength]> {
@@ -212,10 +209,7 @@ impl FourierAnalyzer {
     }
 
     pub fn average(&mut self) -> analyzer::Spectrum<&[analyzer::SignalStrength]> {
-        analyzer::average_spectrum(
-            &mut self.average,
-            &self.spectra,
-        );
+        analyzer::average_spectrum(&mut self.average, &self.spectra);
 
         self.average.as_ref()
     }

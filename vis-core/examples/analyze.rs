@@ -1,7 +1,7 @@
 extern crate log;
 extern crate vis_core;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct AnalyzerResult {
     spectrum: vis_core::analyzer::Spectrum<Vec<f32>>,
     volume: f32,

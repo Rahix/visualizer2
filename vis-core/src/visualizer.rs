@@ -4,7 +4,7 @@ use crate::recorder;
 #[derive(Debug)]
 pub struct Visualizer<R, A>
 where
-    R: Send + 'static,
+    R: Clone + Send + 'static,
     for<'r> A: FnMut(&'r mut R, &analyzer::SampleBuffer) -> &'r mut R + Send + 'static,
 {
     pub initial: R,
@@ -15,7 +15,7 @@ where
 
 impl<R, A> Visualizer<R, A>
 where
-    R: Send + 'static,
+    R: Clone + Send + 'static,
     for<'r> A: FnMut(&'r mut R, &analyzer::SampleBuffer) -> &'r mut R + Send + 'static,
 {
     pub fn new(initial: R, analyzer: A) -> Visualizer<R, A> {

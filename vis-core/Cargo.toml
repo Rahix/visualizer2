@@ -12,6 +12,10 @@ log = "0.4.6"
 parking_lot = "0.7.0"
 rustfft = "2.1.0"
 
+[dependencies.triple_buffer]
+version = "4.0.0"
+features = ["raw"]
+
 [dependencies.pulse-simple]
 optional = true
 version = "1.0.1"

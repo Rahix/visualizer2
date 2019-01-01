@@ -67,14 +67,15 @@ fn main() {
     vis_core::default_log();
 
     let mut frames = {
+        // Analyzer {{{
         let mut beat_spectralizer = analyzer::FourierBuilder::new()
             .length(16)
-            .downsample(20)
+            .downsample(10)
             .plan();
         let mut beat_avg = analyzer::Spectrum::new(vec![0.0; beat_spectralizer.buckets], 0.0, 1.0);
         let mut beat = analyzer::BeatBuilder::new()
             .decay(2000.0)
-            .trigger(0.55)
+            .trigger(0.4)
             .build();
         let mut beat_num = 0;
 
@@ -94,7 +95,7 @@ fn main() {
                     &beat_spectralizer.analyze(&samples),
                 );
 
-                if beat.detect(&beat_avg) {
+                if beat.detect(&beat_avg.slice(50.0, 100.0)) {
                     beat_num += 1;
                 }
                 info.beat = beat_num;
@@ -110,6 +111,7 @@ fn main() {
             },
         )
         .frames()
+        // }}}
     };
 
     frames.detach_analyzer();

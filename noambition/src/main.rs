@@ -53,8 +53,9 @@ struct Vertex {
 
 glium::implement_vertex!(Vertex, position, color_id);
 
+#[derive(Debug, Clone)]
 pub struct VisInfo {
-    beat: bool,
+    beat: u64,
     beat_volume: f32,
     volume: f32,
     analyzer: analyzer::FourierAnalyzer,
@@ -75,12 +76,13 @@ fn main() {
             .decay(2000.0)
             .trigger(0.55)
             .build();
+        let mut beat_num = 0;
 
         let analyzer = analyzer::FourierBuilder::new().plan();
 
         vis_core::Visualizer::new(
             VisInfo {
-                beat: false,
+                beat: 0,
                 beat_volume: 0.0,
                 volume: 0.0,
                 spectrum: analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0),
@@ -92,7 +94,10 @@ fn main() {
                     &beat_spectralizer.analyze(&samples),
                 );
 
-                info.beat |= beat.detect(&beat_avg);
+                if beat.detect(&beat_avg) {
+                    beat_num += 1;
+                }
+                info.beat = beat_num;
                 info.beat_volume = beat.last_volume();
                 info.volume = samples.volume(0.3);
 
@@ -337,6 +342,7 @@ fn main() {
     let mut row_spectrum = vec![0.0; cols];
 
     let mut beat_rolling = 0.0;
+    let mut last_beat_num = 0;
 
     'main: for frame in frames.iter() {
         use glium::Surface;
@@ -348,9 +354,9 @@ fn main() {
         let (volume, nmax, maxima, notes_rolling_spectrum, base_volume) = frame.lock_info(|info| {
             rolling_volume = info.volume.max(rolling_volume * slowdown);
 
-            if info.beat {
+            if info.beat != last_beat_num {
                 last_beat = frame.time;
-                info.beat = false;
+                last_beat_num = info.beat;
             }
 
             let notes_spectrum = info.spectrum.slice(220.0, 660.0).fill_buckets(&mut notes_buf[..]);

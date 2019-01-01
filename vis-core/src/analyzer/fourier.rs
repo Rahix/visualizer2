@@ -98,6 +98,7 @@ impl FourierBuilder {
     }
 }
 
+#[derive(Clone)]
 pub struct FourierAnalyzer {
     length: usize,
     pub buckets: usize,
@@ -115,6 +116,19 @@ pub struct FourierAnalyzer {
 
     spectra: [analyzer::Spectrum<Vec<analyzer::SignalStrength>>; 2],
     average: analyzer::Spectrum<Vec<analyzer::SignalStrength>>,
+}
+
+impl std::fmt::Debug for FourierAnalyzer {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "FourierAnalyzer {{ length: {:?}, downsample: {:?}, lowest: {:?}, highest: {:?} }}",
+            self.length,
+            self.downsample,
+            self.lowest,
+            self.hightest,
+        )
+    }
 }
 
 impl FourierAnalyzer {

@@ -22,11 +22,12 @@ fn main() {
     let mut frames = vis_core::Visualizer::new(
         AnalyzerResult {
             spectrum,
-            ..Default::default()
+            .. Default::default()
         },
         move |info, samples| {
-            vis_core::analyzer::average_spectrum(&mut info.spectrum, &analyzer.analyze(samples));
+            analyzer.analyze(samples);
 
+            info.spectrum.fill_from(&analyzer.average());
             info.volume = samples.volume(0.3) * 400.0;
             info.beat = info.spectrum.slice(50.0, 100.0).max() * 0.01;
             info

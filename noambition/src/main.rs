@@ -72,7 +72,6 @@ fn main() {
             .length(16)
             .downsample(10)
             .plan();
-        let mut beat_avg = analyzer::Spectrum::new(vec![0.0; beat_spectralizer.buckets], 0.0, 1.0);
         let mut beat = analyzer::BeatBuilder::new()
             .decay(2000.0)
             .trigger(0.4)
@@ -90,22 +89,16 @@ fn main() {
                 analyzer,
             },
             move |info, samples| {
-                analyzer::average_spectrum(
-                    &mut beat_avg,
-                    &beat_spectralizer.analyze(&samples),
-                );
+                beat_spectralizer.analyze(&samples);
 
-                if beat.detect(&beat_avg.slice(50.0, 100.0)) {
+                if beat.detect(&beat_spectralizer.average().slice(50.0, 100.0)) {
                     beat_num += 1;
                 }
                 info.beat = beat_num;
                 info.beat_volume = beat.last_volume();
                 info.volume = samples.volume(0.3);
 
-                analyzer::average_spectrum(
-                    &mut info.spectrum,
-                    &info.analyzer.analyze(&samples),
-                );
+                info.spectrum.fill_from(&info.analyzer.average());
 
                 info
             },

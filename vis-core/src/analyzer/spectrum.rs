@@ -212,6 +212,18 @@ impl<S: StorageMut> Spectrum<S> {
     pub fn iter_mut<'a>(&'a mut self) -> std::slice::IterMut<'a, SignalStrength> {
         self.buckets.iter_mut()
     }
+
+    pub fn fill_from<S2: Storage>(&mut self, other: &Spectrum<S2>) {
+        assert_eq!(self.len(), other.len(), "Spectrums have different sizes!");
+
+        self.width = other.width;
+        self.lowest = other.lowest;
+        self.highest = other.highest;
+
+        for (s, o) in self.iter_mut().zip(other.iter()) {
+            *s = *o;
+        }
+    }
 }
 
 pub fn average_spectrum<'a, S: Storage, SMut: StorageMut>(

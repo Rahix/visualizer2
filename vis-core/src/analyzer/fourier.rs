@@ -123,10 +123,7 @@ impl std::fmt::Debug for FourierAnalyzer {
         write!(
             f,
             "FourierAnalyzer {{ length: {:?}, downsample: {:?}, lowest: {:?}, highest: {:?} }}",
-            self.length,
-            self.downsample,
-            self.lowest,
-            self.hightest,
+            self.length, self.downsample, self.lowest, self.hightest,
         )
     }
 }

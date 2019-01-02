@@ -22,7 +22,7 @@ fn main() {
     let mut frames = vis_core::Visualizer::new(
         AnalyzerResult {
             spectrum,
-            .. Default::default()
+            ..Default::default()
         },
         move |info, samples| {
             analyzer.analyze(samples);

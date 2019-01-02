@@ -7,8 +7,9 @@ extern crate nalgebra as na;
 use glium::glutin;
 use vis_core::analyzer;
 
-macro_rules! shader_program { // {{{
-    ($display:expr, $vert_file:expr, $frag_file:expr) => ({
+macro_rules! shader_program {
+    // {{{
+    ($display:expr, $vert_file:expr, $frag_file:expr) => {{
         // Use this for debug
         #[cfg(debug_assertions)]
         {
@@ -30,19 +31,19 @@ macro_rules! shader_program { // {{{
                 buf
             };
 
-            glium::Program::from_source($display,
-                    &vert_src,
-                    &frag_src,
-                    None).unwrap()
+            glium::Program::from_source($display, &vert_src, &frag_src, None).unwrap()
         }
 
         // Use this for release
         #[cfg(not(debug_assertions))]
-        glium::Program::from_source($display,
+        glium::Program::from_source(
+            $display,
             include_str!($vert_file),
             include_str!($frag_file),
-            None).unwrap()
-    })
+            None,
+        )
+        .unwrap()
+    }};
 } // }}}
 
 #[derive(Copy, Clone)]
@@ -133,10 +134,7 @@ fn main() {
     let ampli_bottom = vis_core::CONFIG.get_or("noa.cols.amp_bottom", 1.0);
 
     // Colors
-    let colors: Vec<[f32; 4]> = vis_core::CONFIG.get_or(
-        "noa.cols.colors",
-        vec![],
-    );
+    let colors: Vec<[f32; 4]> = vis_core::CONFIG.get_or("noa.cols.colors", vec![]);
     let note_roll_size = vis_core::CONFIG.get_or("noa.cols.note_roll", 20) as f32;
 
     // Camera
@@ -148,7 +146,10 @@ fn main() {
     // Window Initialization {{{
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
-        .with_dimensions(glutin::dpi::LogicalSize::new(window_width as f64, window_height as f64))
+        .with_dimensions(glutin::dpi::LogicalSize::new(
+            window_width as f64,
+            window_height as f64,
+        ))
         .with_maximized(true)
         .with_decorations(false)
         .with_fullscreen(Some(events_loop.get_primary_monitor()))
@@ -169,19 +170,18 @@ fn main() {
         glium::texture::MipmapsOption::NoMipmap,
         window_width,
         window_height,
-    ).unwrap();
+    )
+    .unwrap();
     let depth1 = glium::texture::DepthTexture2d::empty_with_format(
         &display,
         glium::texture::DepthFormat::F32,
         glium::texture::MipmapsOption::NoMipmap,
         window_width,
         window_height,
-    ).unwrap();
-    let mut framebuffer1 = glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(
-        &display,
-        &tex1,
-        &depth1,
-    ).unwrap();
+    )
+    .unwrap();
+    let mut framebuffer1 =
+        glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(&display, &tex1, &depth1).unwrap();
 
     let tex2 = glium::texture::Texture2d::empty_with_format(
         &display,
@@ -189,24 +189,24 @@ fn main() {
         glium::texture::MipmapsOption::NoMipmap,
         window_width,
         window_height,
-    ).unwrap();
+    )
+    .unwrap();
     let depth2 = glium::texture::DepthTexture2d::empty_with_format(
         &display,
         glium::texture::DepthFormat::F32,
         glium::texture::MipmapsOption::NoMipmap,
         window_width,
         window_height,
-    ).unwrap();
-    let mut framebuffer2 = glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(
-        &display,
-        &tex2,
-        &depth2,
-    ).unwrap();
+    )
+    .unwrap();
+    let mut framebuffer2 =
+        glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(&display, &tex2, &depth2).unwrap();
     // }}}
 
     // Shader Initialization {{{
     let prepass_program = shader_program!(&display, "shaders/prepass.vert", "shaders/prepass.frag");
-    let background_program = shader_program!(&display, "shaders/pp.vert", "shaders/background.frag");
+    let background_program =
+        shader_program!(&display, "shaders/pp.vert", "shaders/background.frag");
     // let fxaa_program = shader_program!(&display, "shaders/pp.vert", "shaders/fxaa.frag");
     // let bokeh_program = shader_program!(&display, "shaders/pp.vert", "shaders/bokeh.frag");
     // let color_program = shader_program!(&display, "shaders/pp.vert", "shaders/color.frag");
@@ -244,13 +244,15 @@ fn main() {
                     texcoord: [0.0, 1.0],
                 },
             ],
-        ).unwrap()
+        )
+        .unwrap()
     };
     let quad_inds = glium::IndexBuffer::new(
         &display,
         glium::index::PrimitiveType::TrianglesList,
         &[0u16, 1, 2, 0, 2, 3],
-    ).unwrap();
+    )
+    .unwrap();
     // }}}
 
     // Lines {{{
@@ -295,10 +297,8 @@ fn main() {
         for (buf, color) in colors_buf.iter_mut().zip(colors.iter()) {
             *buf = *color;
         }
-        let lines_colors = glium::uniforms::UniformBuffer::persistent(
-            &display,
-            colors_buf,
-        ).unwrap();
+        let lines_colors =
+            glium::uniforms::UniformBuffer::persistent(&display, colors_buf).unwrap();
 
         (
             glium::VertexBuffer::persistent(&display, &v_buf).unwrap(),
@@ -313,10 +313,7 @@ fn main() {
         for (buf, color) in colors_buf.iter_mut().zip(colors.iter()) {
             *buf = *color;
         }
-        glium::uniforms::UniformBuffer::persistent(
-            &display,
-            colors_buf,
-        ).unwrap()
+        glium::uniforms::UniformBuffer::persistent(&display, colors_buf).unwrap()
     };
     // }}}
 
@@ -354,7 +351,10 @@ fn main() {
                 last_beat_num = info.beat;
             }
 
-            let notes_spectrum = info.spectrum.slice(220.0, 660.0).fill_buckets(&mut notes_buf[..]);
+            let notes_spectrum = info
+                .spectrum
+                .slice(220.0, 660.0)
+                .fill_buckets(&mut notes_buf[..]);
             for (n, s) in notes_rolling_buf.iter_mut().zip(notes_spectrum.iter()) {
                 *n = (*n * (note_roll_size - 1.0) + s) / note_roll_size;
             }
@@ -366,7 +366,13 @@ fn main() {
             let mut maxima = [(0.0, 0.0); 4];
             let nmax = notes_rolling_spectrum.find_maxima(&mut maxima[..]);
 
-            (info.volume, nmax, maxima, notes_rolling_spectrum, info.beat_volume)
+            (
+                info.volume,
+                nmax,
+                maxima,
+                notes_rolling_spectrum,
+                info.beat_volume,
+            )
         });
         // }}}
 
@@ -377,20 +383,15 @@ fn main() {
             &na::Vector3::new(0.0, 0.0, 1.0),
         );
 
-        let perspective = na::Matrix4::new_perspective(
-            aspect,
-            std::f32::consts::FRAC_PI_4,
-            0.001,
-            100.0,
-        );
+        let perspective =
+            na::Matrix4::new_perspective(aspect, std::f32::consts::FRAC_PI_4, 0.001, 100.0);
         // }}}
 
         // Grid {{{
         let speed = base_speed + rolling_volume * speed_deviation;
         let offset = (previous_offset + delta * speed) % rowsize;
-        let model_grid = na::Translation3::from(
-            na::Vector3::new(0.0, -offset, 0.0)
-        ).to_homogeneous();
+        let model_grid =
+            na::Translation3::from(na::Vector3::new(0.0, -offset, 0.0)).to_homogeneous();
 
         // Color Notes {{{
         {
@@ -426,20 +427,32 @@ fn main() {
 
             // Write spectral information
             frame.lock_info(|info| {
-                let left = info.analyzer.left().slice(100.0, 800.0).fill_buckets(&mut row_spectrum[..]);
+                let left = info
+                    .analyzer
+                    .left()
+                    .slice(100.0, 800.0)
+                    .fill_buckets(&mut row_spectrum[..]);
                 let row_offset = nrow * write_row;
                 let max = left.max();
                 for (i, v) in left.iter().enumerate() {
-                    lines_buf[row_offset + i * 2 + 1].position[2] = base_height / 2.0 + v / max * ampli_top;
-                    lines_buf[row_offset + i * 2].position[2] = - base_height / 2.0 - v / max * ampli_bottom;
+                    lines_buf[row_offset + i * 2 + 1].position[2] =
+                        base_height / 2.0 + v / max * ampli_top;
+                    lines_buf[row_offset + i * 2].position[2] =
+                        -base_height / 2.0 - v / max * ampli_bottom;
                 }
 
-                let right = info.analyzer.right().slice(100.0, 800.0).fill_buckets(&mut row_spectrum[..]);
+                let right = info
+                    .analyzer
+                    .right()
+                    .slice(100.0, 800.0)
+                    .fill_buckets(&mut row_spectrum[..]);
                 let row_offset = nrow * write_row + cols * 2;
                 let max = right.max();
                 for (i, v) in right.iter().enumerate() {
-                    lines_buf[row_offset + i * 2 + 1].position[2] = base_height / 2.0 + v / max * ampli_top;
-                    lines_buf[row_offset + i * 2].position[2] = - base_height / 2.0 - v / max * ampli_bottom;
+                    lines_buf[row_offset + i * 2 + 1].position[2] =
+                        base_height / 2.0 + v / max * ampli_top;
+                    lines_buf[row_offset + i * 2].position[2] =
+                        -base_height / 2.0 - v / max * ampli_bottom;
                 }
             });
 
@@ -485,7 +498,8 @@ fn main() {
             &prepass_program,
             &uniforms,
             &draw_params,
-        ).unwrap();
+        )
+        .unwrap();
         // }}}
 
         // Points {{{
@@ -502,7 +516,8 @@ fn main() {
             &prepass_program,
             &uniforms,
             &draw_params,
-        ).unwrap();
+        )
+        .unwrap();
         // }}}
 
         // Post-Processing {{{
@@ -526,7 +541,14 @@ fn main() {
             beat: beat_rolling,
         };
 
-        fa.draw(&quad_verts, &quad_inds, &background_program, &ua, &draw_params).unwrap();
+        fa.draw(
+            &quad_verts,
+            &quad_inds,
+            &background_program,
+            &ua,
+            &draw_params,
+        )
+        .unwrap();
         #[allow(unused_variables)]
         let (fa, ua, fb, ub) = (fb, ub, fa, ua);
         // }}}
@@ -559,11 +581,12 @@ fn main() {
         events_loop.poll_events(|ev| match ev {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::CloseRequested => closed = true,
-                glutin::WindowEvent::KeyboardInput{
-                    input: glutin::KeyboardInput {
-                        virtual_keycode: Some(glutin::VirtualKeyCode::Escape),
-                        ..
-                    },
+                glutin::WindowEvent::KeyboardInput {
+                    input:
+                        glutin::KeyboardInput {
+                            virtual_keycode: Some(glutin::VirtualKeyCode::Escape),
+                            ..
+                        },
                     ..
                 } => closed = true,
                 _ => (),

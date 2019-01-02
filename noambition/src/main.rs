@@ -99,6 +99,7 @@ fn main() {
                 info.beat_volume = beat.last_volume();
                 info.volume = samples.volume(0.3);
 
+                info.analyzer.analyze(&samples);
                 info.spectrum.fill_from(&info.analyzer.average());
 
                 info

@@ -4,6 +4,7 @@ use sfml::{system, graphics};
 const BUCKETS: usize = 200;
 const LINES: usize = 200;
 
+#[derive(Debug, Clone)]
 struct AnalyzerResult {
     spectrum: analyzer::Spectrum<Vec<f32>>,
 }

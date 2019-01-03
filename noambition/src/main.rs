@@ -351,7 +351,7 @@ fn main() {
     let mut write_row = rows * 3 / 4;
     let mut last_beat = -100.0;
 
-    let mut notes_spectrum = analyzer::Spectrum::new(vec![0.0; notes_num], 0.0, 1.0);
+    let mut notes_spectrum = analyzer::Spectrum::new(vec![0.0; notes_num], 220.0, 660.0);
     let mut notes_rolling_buf = vec![0.0; notes_num];
     let mut row_buf = Vec::with_capacity(nrow);
     let mut row_spectrum = vec![0.0; cols];
@@ -374,10 +374,7 @@ fn main() {
                 last_beat_num = info.beat;
             }
 
-            let notes_spectrum = info
-                .spectrum
-                .slice(220.0, 660.0)
-                .fill_spectrum(&mut notes_spectrum);
+            let notes_spectrum = info.spectrum.fill_spectrum(&mut notes_spectrum);
 
             for (n, s) in notes_rolling_buf.iter_mut().zip(notes_spectrum.iter()) {
                 *n = (*n * (note_roll_size - 1.0) + s) / note_roll_size;

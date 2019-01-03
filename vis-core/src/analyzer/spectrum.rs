@@ -133,6 +133,7 @@ impl<S: Storage> Spectrum<S> {
         self.buckets.len()
     }
 
+    /// Return a borrowed spectrum
     pub fn as_ref<'a>(&'a self) -> Spectrum<&'a [SignalStrength]> {
         Spectrum {
             buckets: &self.buckets,
@@ -217,13 +218,33 @@ impl<S: Storage> Spectrum<S> {
         }
     }
 
+    /// Fill a spectrum with data from this one.
+    ///
+    /// Will slice and merge adjacent buckets to make it fit.
+    ///
+    /// *Note*: Data might be slightly off if `lowest` and `highest` of `other` do not exactly
+    /// match buckets in this spectrum.
+    ///
+    /// # Example
+    /// ```
+    /// # use vis_core::analyzer;
+    /// let mut spectrum = analyzer::Spectrum::new(vec![0.0; 400], 220.0, 880.0);
+    ///
+    /// // Set some value for demo purposes
+    /// let id = spectrum.freq_to_id(500.0);
+    /// spectrum[id] = 100.0;
+    ///
+    /// let mut other = analyzer::Spectrum::new(vec![0.0; 20], 440.0, 660.0);
+    ///
+    /// spectrum.fill_spectrum(&mut other);
+    ///
+    /// assert_eq!(other[other.freq_to_id(500.0)], 100.0);
+    /// ```
     pub fn fill_spectrum<'a, S2: StorageMut>(
         &self,
         other: &'a mut Spectrum<S2>,
     ) -> &'a mut Spectrum<S2> {
-        self.fill_buckets(&mut *other.buckets);
-
-        other.respan(self.lowest, self.highest);
+        self.slice(other.lowest, other.highest).fill_buckets(&mut *other.buckets);
 
         other
     }
@@ -320,16 +341,12 @@ impl<S: StorageMut> Spectrum<S> {
     }
 
     /// Fill this spectrum with values from another one
+    ///
+    /// Will merge adjacent buckets to fit data into our buffer.
     pub fn fill_from<S2: Storage>(&mut self, other: &Spectrum<S2>) {
-        assert_eq!(self.len(), other.len(), "Spectrums have different sizes!");
+        other.fill_buckets(&mut *self.buckets);
 
-        self.width = other.width;
-        self.lowest = other.lowest;
-        self.highest = other.highest;
-
-        for (s, o) in self.iter_mut().zip(other.iter()) {
-            *s = *o;
-        }
+        self.respan(other.lowest, other.highest);
     }
 }
 

@@ -1,37 +1,82 @@
 use super::Sample;
 use crate::analyzer;
 
+/// Window functions
+///
+/// A window-function in this case takes a size and should return a `Vec` of that length filled
+/// with the precomputed window coefficients.  The following are available by default:
+///
+/// * [None / Rectangle](fn.none.html)
+///
+/// ![Rectangle Window](https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Window_function_and_frequency_response_-_Rectangular.svg/512px-Window_function_and_frequency_response_-_Rectangular.svg.png)
+/// * [Sine](fn.sine.html)
+///
+/// ![Sine Window](https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Window_function_and_frequency_response_-_Cosine.svg/512px-Window_function_and_frequency_response_-_Cosine.svg.png)
+/// * [Hanning](fn.hanning.html)
+///
+/// ![Hanning Window](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Window_function_and_frequency_response_-_Hann.svg/512px-Window_function_and_frequency_response_-_Hann.svg.png)
+/// * [Hamming](fn.hamming.html)
+///
+/// ![Hamming Window](https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Window_function_and_frequency_response_-_Hamming_%28alpha_%3D_0.53836%29.svg/512px-Window_function_and_frequency_response_-_Hamming_%28alpha_%3D_0.53836%29.svg.png)
+/// * [Blackman](fn.blackman.html)
+///
+/// ![Blackman Window](https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Window_function_and_frequency_response_-_Blackman.svg/512px-Window_function_and_frequency_response_-_Blackman.svg.png)
+/// * [Nuttall](fn.nuttall.html)
+///
+/// ![Nuttall Window](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Window_function_and_frequency_response_-_Nuttall_%28continuous_first_derivative%29.svg/512px-Window_function_and_frequency_response_-_Nuttall_%28continuous_first_derivative%29.svg.png)
 pub mod window {
+    /// Blackman Window
+    ///
+    /// ![Blackman Window](https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Window_function_and_frequency_response_-_Blackman.svg/512px-Window_function_and_frequency_response_-_Blackman.svg.png)
     pub fn blackman(size: usize) -> Vec<f32> {
         apodize::blackman_iter(size).map(|f| f as f32).collect()
     }
 
+    /// Hamming Window
+    ///
+    /// ![Hamming Window](https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Window_function_and_frequency_response_-_Hamming_%28alpha_%3D_0.53836%29.svg/512px-Window_function_and_frequency_response_-_Hamming_%28alpha_%3D_0.53836%29.svg.png)
     pub fn hamming(size: usize) -> Vec<f32> {
         apodize::hamming_iter(size).map(|f| f as f32).collect()
     }
 
+    /// Hanning Window
+    ///
+    /// ![Hanning Window](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Window_function_and_frequency_response_-_Hann.svg/512px-Window_function_and_frequency_response_-_Hann.svg.png)
     pub fn hanning(size: usize) -> Vec<f32> {
         apodize::hanning_iter(size).map(|f| f as f32).collect()
     }
 
+    /// No window function / Rectangle window
+    ///
+    /// ![Rectangle Window](https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Window_function_and_frequency_response_-_Rectangular.svg/512px-Window_function_and_frequency_response_-_Rectangular.svg.png)
     pub fn none(size: usize) -> Vec<f32> {
         vec![1.0; size]
     }
 
+    /// Nuttall Window
+    ///
+    /// ![Nuttall Window](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Window_function_and_frequency_response_-_Nuttall_%28continuous_first_derivative%29.svg/512px-Window_function_and_frequency_response_-_Nuttall_%28continuous_first_derivative%29.svg.png)
     pub fn nuttall(size: usize) -> Vec<f32> {
         apodize::nuttall_iter(size).map(|f| f as f32).collect()
     }
 
+    /// Sine Window
+    ///
+    /// ![Sine Window](https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Window_function_and_frequency_response_-_Cosine.svg/512px-Window_function_and_frequency_response_-_Cosine.svg.png)
     pub fn sine(size: usize) -> Vec<f32> {
         (0..size)
             .map(|i| (i as f32 / (size - 1) as f32 * std::f32::consts::PI).sin())
             .collect()
     }
 
+    /// Triangular Window
+    ///
+    /// ![Triangular Window](https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Window_function_and_frequency_response_-_Triangular.svg/512px-Window_function_and_frequency_response_-_Triangular.svg.png)
     pub fn triangular(size: usize) -> Vec<f32> {
         apodize::triangular_iter(size).map(|f| f as f32).collect()
     }
 
+    /// Get the window function for the specified name
     pub fn from_str(name: &str) -> Option<fn(usize) -> Vec<f32>> {
         match name {
             "blackman" => Some(blackman),

@@ -11,6 +11,14 @@ visualizer needs as little boilerplate as possible.  In practice, the following 
 need to get started:
 
 ```rust
+// The data-type for storing analyzer results
+#[derive(Debug, Clone)]
+pub struct AnalyzerResult {
+    spectrum: vis_core::analyzer::Spectrum<Vec<f32>>,
+    volume: f32,
+    beat: f32,
+}
+
 fn main() {
     // Initialize the logger.  Take a look at the sources if you want to customize
     // the logger.
@@ -32,7 +40,8 @@ fn main() {
     let mut frames = vis_core::Visualizer::new(
         AnalyzerResult {
             spectrum,
-            ..Default::default()
+            volume: 0.0,
+            beat: 0.0,
         },
         // This closure is the "analyzer".  It will be executed in a loop to always
         // have the latest data available.

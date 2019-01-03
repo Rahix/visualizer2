@@ -386,7 +386,7 @@ fn main() {
             );
 
             let mut maxima = [(0.0, 0.0); 4];
-            let nmax = notes_rolling_spectrum.find_maxima(&mut maxima[..]);
+            let nmax = notes_rolling_spectrum.find_maxima(&mut maxima[..]).len();
 
             (
                 info.volume,

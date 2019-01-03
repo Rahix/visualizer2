@@ -244,7 +244,8 @@ impl<S: Storage> Spectrum<S> {
         &self,
         other: &'a mut Spectrum<S2>,
     ) -> &'a mut Spectrum<S2> {
-        self.slice(other.lowest, other.highest).fill_buckets(&mut *other.buckets);
+        self.slice(other.lowest, other.highest)
+            .fill_buckets(&mut *other.buckets);
 
         other
     }
@@ -277,7 +278,8 @@ impl<S: Storage> Spectrum<S> {
     /// Find maxima in this spectrum and fill `buffer` with them
     ///
     /// Please note that this method will behave incorrectly if more than `buffer.len()` maxima
-    /// exist.  Maxima are sorted, starting with the biggest.  Returns the number of maxima found.
+    /// exist.  Maxima are sorted, starting with the biggest.  Returns a slice of the given buffer
+    /// filled with the found maxima.  Might be smaller than `buffer`.
     ///
     /// # Example
     /// ```
@@ -290,11 +292,11 @@ impl<S: Storage> Spectrum<S> {
     /// spectrum[300] = 15.0;
     ///
     /// let mut buf = [(0.0, 0.0); 5];
-    /// let num = spectrum.find_maxima(&mut buf);
+    /// let maxima = spectrum.find_maxima(&mut buf);
     ///
-    /// assert_eq!(num, 3);
+    /// assert_eq!(maxima.len(), 3);
     /// assert_eq!(
-    ///     &buf[..num],
+    ///     &maxima,
     ///     &[
     ///         (spectrum.id_to_freq(200), 20.0),
     ///         (spectrum.id_to_freq(300), 15.0),
@@ -302,7 +304,7 @@ impl<S: Storage> Spectrum<S> {
     ///     ],
     /// );
     /// ```
-    pub fn find_maxima(&self, buffer: &mut [(f32, f32)]) -> usize {
+    pub fn find_maxima<'a>(&self, buffer: &'a mut [(f32, f32)]) -> &'a [(f32, f32)] {
         let derivative = self
             .buckets
             .windows(2)
@@ -328,9 +330,9 @@ impl<S: Storage> Spectrum<S> {
             num += 1;
         }
 
-        buffer[0..num].sort_by(|(_, a1), (_, a2)| a2.partial_cmp(a1).unwrap());
+        buffer[..num].sort_by(|(_, a1), (_, a2)| a2.partial_cmp(a1).unwrap());
 
-        num
+        &buffer[..num]
     }
 }
 
@@ -479,10 +481,10 @@ mod tests {
             spectrum[m2 + 1] = 350000.0;
 
             let mut maxima = [(0.0, 0.0); 10];
-            let n = spectrum.find_maxima(&mut maxima);
+            let maxima = spectrum.find_maxima(&mut maxima);
 
             assert_eq!(
-                &maxima[..n],
+                &maxima,
                 &[
                     (spectrum.id_to_freq(m1), 1000000.0),
                     (spectrum.id_to_freq(m2), 400000.0),
@@ -567,5 +569,20 @@ mod tests {
 
             buf = Some(buckets.buckets);
         })
+    }
+
+    #[test]
+    fn test_self_move() {
+        let a = Spectrum::new(vec![1.0; 200], 100.0, 800.0);
+        let mut b = Spectrum::new(vec![0.0; 20], 200.0, 400.0);
+        let mut c = Spectrum::new(vec![0.0; 20], 0.0, 1.0);
+
+        for _ in 0..2 {
+            a.fill_spectrum(&mut b);
+            c = b.fill_buckets(c.buckets);
+        }
+
+        assert_eq!(b.lowest(), c.lowest());
+        assert_eq!(b.highest(), c.highest());
     }
 }

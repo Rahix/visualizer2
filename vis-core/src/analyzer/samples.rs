@@ -1,3 +1,4 @@
+//! Sample Buffer
 use std::collections;
 use std::sync;
 

@@ -1,3 +1,4 @@
+//! Fourier Analysis
 use super::Sample;
 use crate::analyzer;
 
@@ -277,7 +278,8 @@ mod tests {
 
     #[test]
     fn test_init() {
-        let analyzer = FourierBuilder::new()
+        FourierBuilder::new()
+            .rate(8000)
             .length(512)
             .window(window::from_str("nuttall").unwrap())
             .downsample(8)
@@ -287,6 +289,7 @@ mod tests {
     #[test]
     fn test_analyze() {
         let mut analyzer = FourierBuilder::new()
+            .rate(8000)
             .length(512)
             .window(window::from_str("nuttall").unwrap())
             .downsample(2)
@@ -296,9 +299,6 @@ mod tests {
 
         buf.push(&[[1.0; 2]; 1024]);
 
-        let mut out_l = crate::analyzer::Spectrum::new(vec![0.0; 256], 0.0, 1.0);
-        let mut out_r = crate::analyzer::Spectrum::new(vec![0.0; 256], 0.0, 1.0);
-
-        analyzer.analyze(&buf, &mut [out_l, out_r]);
+        analyzer.analyze(&buf);
     }
 }

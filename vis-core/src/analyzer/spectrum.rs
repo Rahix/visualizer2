@@ -1,3 +1,4 @@
+//! Spectrum Storage Type
 pub type Frequency = f32;
 pub type SignalStrength = f32;
 
@@ -10,10 +11,10 @@ impl<T> StorageMut for T where T: Storage + std::ops::DerefMut {}
 
 #[derive(Debug, Clone)]
 pub struct Spectrum<S: Storage> {
-    pub buckets: S,
-    pub width: Frequency,
-    pub lowest: Frequency,
-    pub highest: Frequency,
+    buckets: S,
+    width: Frequency,
+    lowest: Frequency,
+    highest: Frequency,
 }
 
 impl<S: Storage> std::ops::Index<usize> for Spectrum<S> {

@@ -1,3 +1,4 @@
+//! Beat Detection
 use crate::analyzer;
 
 #[derive(Debug, Default)]

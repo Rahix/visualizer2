@@ -351,7 +351,7 @@ fn main() {
     let mut write_row = rows * 3 / 4;
     let mut last_beat = -100.0;
 
-    let mut notes_buf = vec![0.0; notes_num];
+    let mut notes_spectrum = analyzer::Spectrum::new(vec![0.0; notes_num], 0.0, 1.0);
     let mut notes_rolling_buf = vec![0.0; notes_num];
     let mut row_buf = Vec::with_capacity(nrow);
     let mut row_spectrum = vec![0.0; cols];
@@ -377,15 +377,17 @@ fn main() {
             let notes_spectrum = info
                 .spectrum
                 .slice(220.0, 660.0)
-                .fill_buckets(&mut notes_buf[..]);
+                .fill_spectrum(&mut notes_spectrum);
+
             for (n, s) in notes_rolling_buf.iter_mut().zip(notes_spectrum.iter()) {
                 *n = (*n * (note_roll_size - 1.0) + s) / note_roll_size;
             }
             let notes_rolling_spectrum = vis_core::analyzer::Spectrum::new(
-                &mut notes_rolling_buf[..],
-                notes_spectrum.lowest,
-                notes_spectrum.highest,
+                &mut *notes_rolling_buf,
+                notes_spectrum.lowest(),
+                notes_spectrum.highest(),
             );
+
             let mut maxima = [(0.0, 0.0); 4];
             let nmax = notes_rolling_spectrum.find_maxima(&mut maxima[..]);
 

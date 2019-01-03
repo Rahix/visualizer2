@@ -68,6 +68,16 @@ impl<S: Storage> Spectrum<S> {
         }
     }
 
+    #[inline]
+    pub fn lowest(&self) -> Frequency {
+        self.lowest
+    }
+
+    #[inline]
+    pub fn highest(&self) -> Frequency {
+        self.highest
+    }
+
     fn respan(&mut self, low: Frequency, high: Frequency) {
         self.width = (high - low) / (self.buckets.len() as Frequency - 1.0);
         self.lowest = low;
@@ -153,6 +163,17 @@ impl<S: Storage> Spectrum<S> {
         }
     }
 
+    pub fn fill_spectrum<'a, S2: StorageMut>(
+        &self,
+        other: &'a mut Spectrum<S2>,
+    ) -> &'a mut Spectrum<S2> {
+        self.fill_buckets(&mut *other.buckets);
+
+        other.respan(self.lowest, self.highest);
+
+        other
+    }
+
     pub fn find_maxima_alloc(&self) -> Vec<(f32, f32)> {
         let derivative = self
             .buckets
@@ -210,10 +231,12 @@ impl<S: Storage> Spectrum<S> {
 }
 
 impl<S: StorageMut> Spectrum<S> {
+    /// Iterate over this spectrums buckets mutably
     pub fn iter_mut<'a>(&'a mut self) -> std::slice::IterMut<'a, SignalStrength> {
         self.buckets.iter_mut()
     }
 
+    /// Fill this spectrum with values from another one
     pub fn fill_from<S2: Storage>(&mut self, other: &Spectrum<S2>) {
         assert_eq!(self.len(), other.len(), "Spectrums have different sizes!");
 
@@ -227,6 +250,7 @@ impl<S: StorageMut> Spectrum<S> {
     }
 }
 
+/// Compute the average of multiple spectra
 pub fn average_spectrum<'a, S: Storage, SMut: StorageMut>(
     out: &'a mut Spectrum<SMut>,
     spectra: &[Spectrum<S>],

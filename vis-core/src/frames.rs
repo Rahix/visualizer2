@@ -63,21 +63,19 @@ where
 
         std::thread::Builder::new()
             .name("analyzer".into())
-            .spawn(move || {
-                loop {
-                    let start = std::time::Instant::now();
-                    analyzer(info.raw_input_buffer(), &buffer);
-                    info.raw_publish();
+            .spawn(move || loop {
+                let start = std::time::Instant::now();
+                analyzer(info.raw_input_buffer(), &buffer);
+                info.raw_publish();
 
-                    let now = std::time::Instant::now();
-                    let duration = now - start;
-                    log::trace!("Conversion Time (real): {:?}", duration);
+                let now = std::time::Instant::now();
+                let duration = now - start;
+                log::trace!("Conversion Time (real): {:?}", duration);
 
-                    if duration < conv_time {
-                        let sleep = conv_time - duration;
-                        log::trace!("Sleeping for {:?}", sleep);
-                        std::thread::sleep(sleep);
-                    }
+                if duration < conv_time {
+                    let sleep = conv_time - duration;
+                    log::trace!("Sleeping for {:?}", sleep);
+                    std::thread::sleep(sleep);
                 }
             })
             .unwrap();

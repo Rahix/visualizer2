@@ -109,7 +109,7 @@ fn main() {
         // }}}
     };
 
-    frames.detach_analyzer();
+    frames.detach_analyzer(300);
 
     // Config {{{
     // Window

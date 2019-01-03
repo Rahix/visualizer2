@@ -41,25 +41,37 @@ where
             recorder: vis.recorder.unwrap_or_else(|| recorder::default()),
         };
 
-        if vis.async_analyzer.unwrap_or(false) {
-            f.detach_analyzer();
+        if let Some(num) = vis.async_analyzer {
+            if num != 0 {
+                f.detach_analyzer(num);
+            }
         }
 
         f
     }
 
-    pub fn detach_analyzer(&mut self) {
+    pub fn detach_analyzer(&mut self, num: usize) {
         let (mut analyzer, mut info) = self.analyzer.take().unwrap();
         let buffer = self.recorder.sample_buffer().clone();
+
+        let conv_time = std::time::Duration::new(0, (1000000000 / num) as u32);
 
         std::thread::Builder::new()
             .name("analyzer".into())
             .spawn(move || {
+                let mut start = std::time::Instant::now();
                 loop {
                     analyzer(info.raw_input_buffer(), &buffer);
                     info.raw_publish();
-                    // Todo, properly implement this detacher
-                    std::thread::sleep_ms(1);
+
+                    let now = std::time::Instant::now();
+                    let duration = now - start;
+                    log::trace!("Conversion Time: {:?}", duration);
+                    start = now;
+
+                    if duration < conv_time {
+                        std::thread::sleep(conv_time - duration);
+                    }
                 }
             })
             .unwrap();

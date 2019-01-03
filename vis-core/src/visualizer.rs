@@ -10,7 +10,7 @@ where
     pub initial: R,
     pub analyzer: A,
     pub recorder: Option<Box<dyn recorder::Recorder>>,
-    pub async_analyzer: Option<bool>,
+    pub async_analyzer: Option<usize>,
 }
 
 impl<R, A> Visualizer<R, A>
@@ -32,8 +32,8 @@ where
         self
     }
 
-    pub fn async_analyzer(mut self, is_async: bool) -> Visualizer<R, A> {
-        self.async_analyzer = Some(is_async);
+    pub fn async_analyzer(mut self, conversions_per_second: usize) -> Visualizer<R, A> {
+        self.async_analyzer = Some(conversions_per_second);
         self
     }
 

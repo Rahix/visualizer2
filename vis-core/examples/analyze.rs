@@ -42,7 +42,7 @@ fn main() {
     )
     .frames();
 
-    frames.detach_analyzer();
+    frames.detach_analyzer(300);
 
     for frame in frames.iter() {
         frame.lock_info(|info| {

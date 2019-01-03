@@ -359,6 +359,8 @@ fn main() {
     let mut beat_rolling = 0.0;
     let mut last_beat_num = 0;
 
+    let mut maxima_buf = [(0.0, 0.0); 8];
+
     'main: for frame in frames.iter() {
         use glium::Surface;
 
@@ -366,7 +368,7 @@ fn main() {
         trace!("Delta: {}s", delta);
 
         // Audio Info Retrieval {{{
-        let (volume, nmax, maxima, notes_rolling_spectrum, base_volume) = frame.lock_info(|info| {
+        let (volume, maxima, notes_rolling_spectrum, base_volume) = frame.lock_info(|info| {
             rolling_volume = info.volume.max(rolling_volume * slowdown);
 
             if info.beat != last_beat_num {
@@ -385,12 +387,10 @@ fn main() {
                 notes_spectrum.highest(),
             );
 
-            let mut maxima = [(0.0, 0.0); 4];
-            let nmax = notes_rolling_spectrum.find_maxima(&mut maxima[..]).len();
+            let maxima = notes_rolling_spectrum.find_maxima(&mut maxima_buf);
 
             (
                 info.volume,
-                nmax,
                 maxima,
                 notes_rolling_spectrum,
                 info.beat_volume,
@@ -421,7 +421,7 @@ fn main() {
             for color in color_buf.iter_mut() {
                 color[3] = 0.05;
             }
-            for (f, _) in maxima.iter().take(nmax) {
+            for (f, _) in maxima.iter().take(4) {
                 let note = notes_rolling_spectrum.freq_to_id(*f);
                 color_buf[note][3] = 1.0;
             }

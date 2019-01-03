@@ -1,8 +1,15 @@
 //! Spectrum Storage Type
+
+/// Type Alias for Frequencies
 pub type Frequency = f32;
+
+/// Type Alias for Signal Strengths
 pub type SignalStrength = f32;
 
+/// Trait for types that can be used as storage for a spectrum
 pub trait Storage: std::ops::Deref<Target = [SignalStrength]> {}
+
+/// Trait for types that can be used as mutable storage for a spectrum
 pub trait StorageMut: std::ops::Deref<Target = [SignalStrength]> + std::ops::DerefMut {}
 
 impl<T> Storage for T where T: std::ops::Deref<Target = [SignalStrength]> {}
@@ -58,6 +65,18 @@ impl Default for Spectrum<Vec<SignalStrength>> {
 }
 
 impl<S: Storage> Spectrum<S> {
+    /// Create a new spectrum
+    ///
+    /// Takes a storage buffer which is potentially prefilled with spectral data,
+    /// the frequency associated with the lowest bucket and the frequency associated
+    /// with the highest bucket.
+    ///
+    /// # Example
+    /// ```
+    /// # use vis_core::analyzer;
+    /// const N: usize = 128;
+    /// let spectrum = analyzer::Spectrum::new(vec![0.0; N], 440.0, 660.0);
+    /// ```
     pub fn new(data: S, low: Frequency, high: Frequency) -> Spectrum<S> {
         Spectrum {
             width: (high - low) / (data.len() as Frequency - 1.0),
@@ -68,22 +87,26 @@ impl<S: Storage> Spectrum<S> {
         }
     }
 
+    /// Return the frequency of the lowest bucket
     #[inline]
     pub fn lowest(&self) -> Frequency {
         self.lowest
     }
 
+    /// Return the frequency of the highest bucket
     #[inline]
     pub fn highest(&self) -> Frequency {
         self.highest
     }
 
+    /// Respan this spectrum.  Use with care!
     fn respan(&mut self, low: Frequency, high: Frequency) {
         self.width = (high - low) / (self.buckets.len() as Frequency - 1.0);
         self.lowest = low;
         self.highest = high;
     }
 
+    /// Return the index of the bucket associated with a frequency
     pub fn freq_to_id(&self, f: Frequency) -> usize {
         let x = (f - self.lowest) / self.width;
 
@@ -93,16 +116,19 @@ impl<S: Storage> Spectrum<S> {
         i
     }
 
+    /// Return the frequency associated with a bucket
     pub fn id_to_freq(&self, i: usize) -> Frequency {
         assert!(i < self.buckets.len());
 
         i as Frequency * self.width + self.lowest
     }
 
+    /// Iterate over the buckets of this spectrum
     pub fn iter<'a>(&'a self) -> std::slice::Iter<'a, SignalStrength> {
         self.buckets.iter()
     }
 
+    /// Return the number of buckets in this spectrum
     pub fn len(&self) -> usize {
         self.buckets.len()
     }
@@ -116,6 +142,7 @@ impl<S: Storage> Spectrum<S> {
         }
     }
 
+    /// Return the highest signal strengh in this spectrum
     pub fn max(&self) -> SignalStrength {
         *self
             .buckets
@@ -124,10 +151,23 @@ impl<S: Storage> Spectrum<S> {
             .unwrap()
     }
 
+    /// Return the average signal strengh in this spectrum
     pub fn mean(&self) -> SignalStrength {
         self.buckets.iter().sum::<SignalStrength>() / self.len() as f32
     }
 
+    /// Return a spectrum with the buckets between the specified frequencies
+    ///
+    /// Requires **no** allocation!  Please note that the returned spectrum might be slightly
+    /// off if the specified frequencies are not exactly in the middle of two buckets.
+    ///
+    /// # Example
+    /// ```
+    /// # use vis_core::analyzer;
+    /// let spectrum = analyzer::Spectrum::new(vec![0.0; 400], 220.0, 660.0);
+    /// let sliced = spectrum.slice(220.0, 440.0);
+    /// # assert_eq!(sliced.len(), 201);
+    /// ```
     pub fn slice<'a>(&'a self, low: Frequency, high: Frequency) -> Spectrum<&'a [SignalStrength]> {
         let start = self.freq_to_id(low);
         let end = self.freq_to_id(high);
@@ -140,10 +180,24 @@ impl<S: Storage> Spectrum<S> {
         }
     }
 
+    /// Allocate a buffer and fill it with data from this spectrum
+    ///
+    /// Will merge adjacent buckets to fit data into the new buffer.
     pub fn fill_buckets_alloc(&self, n: usize) -> Spectrum<Vec<f32>> {
         self.fill_buckets(vec![0.0; n])
     }
 
+    /// Fill a given buffer with data from this spectrum
+    ///
+    /// Will merge adjacent buckets to fit data into the new buffer.
+    ///
+    /// # Example
+    /// ```
+    /// # use vis_core::analyzer;
+    /// let spectrum = analyzer::Spectrum::new(vec![0.0; 400], 220.0, 660.0);
+    /// let downscaled = spectrum.fill_buckets(vec![0.0; 20]);
+    /// # assert_eq!(downscaled.len(), 20);
+    /// ```
     pub fn fill_buckets<S2: StorageMut>(&self, mut buf: S2) -> Spectrum<S2> {
         for i in 0..buf.len() {
             buf[i] = 0.0;
@@ -174,6 +228,7 @@ impl<S: Storage> Spectrum<S> {
         other
     }
 
+    /// Find all maxima in this spectrum and allocate a buffer containing them
     pub fn find_maxima_alloc(&self) -> Vec<(f32, f32)> {
         let derivative = self
             .buckets
@@ -198,6 +253,34 @@ impl<S: Storage> Spectrum<S> {
         maxima
     }
 
+    /// Find maxima in this spectrum and fill `buffer` with them
+    ///
+    /// Please note that this method will behave incorrectly if more than `buffer.len()` maxima
+    /// exist.  Maxima are sorted, starting with the biggest.  Returns the number of maxima found.
+    ///
+    /// # Example
+    /// ```
+    /// # use vis_core::analyzer;
+    /// let mut spectrum = analyzer::Spectrum::new(vec![0.0; 400], 220.0, 660.0);
+    ///
+    /// // Manually create maxima
+    /// spectrum[100] = 10.0;
+    /// spectrum[200] = 20.0;
+    /// spectrum[300] = 15.0;
+    ///
+    /// let mut buf = [(0.0, 0.0); 5];
+    /// let num = spectrum.find_maxima(&mut buf);
+    ///
+    /// assert_eq!(num, 3);
+    /// assert_eq!(
+    ///     &buf[..num],
+    ///     &[
+    ///         (spectrum.id_to_freq(200), 20.0),
+    ///         (spectrum.id_to_freq(300), 15.0),
+    ///         (spectrum.id_to_freq(100), 10.0),
+    ///     ],
+    /// );
+    /// ```
     pub fn find_maxima(&self, buffer: &mut [(f32, f32)]) -> usize {
         let derivative = self
             .buckets

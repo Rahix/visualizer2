@@ -109,8 +109,6 @@ fn main() {
         // }}}
     };
 
-    frames.detach_analyzer(300);
-
     // Config {{{
     // Window
     let window_width = vis_core::CONFIG.get_or("window.width", 1280);

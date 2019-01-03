@@ -45,6 +45,10 @@ where
             if num != 0 {
                 f.detach_analyzer(num);
             }
+        } else {
+            if let Some(num) = crate::CONFIG.get("audio.conversions") {
+                f.detach_analyzer(num);
+            }
         }
 
         f
@@ -55,22 +59,24 @@ where
         let buffer = self.recorder.sample_buffer().clone();
 
         let conv_time = std::time::Duration::new(0, (1000000000 / num) as u32);
+        log::debug!("Conversion Time: {:?}", conv_time);
 
         std::thread::Builder::new()
             .name("analyzer".into())
             .spawn(move || {
-                let mut start = std::time::Instant::now();
                 loop {
+                    let start = std::time::Instant::now();
                     analyzer(info.raw_input_buffer(), &buffer);
                     info.raw_publish();
 
                     let now = std::time::Instant::now();
                     let duration = now - start;
-                    log::trace!("Conversion Time: {:?}", duration);
-                    start = now;
+                    log::trace!("Conversion Time (real): {:?}", duration);
 
                     if duration < conv_time {
-                        std::thread::sleep(conv_time - duration);
+                        let sleep = conv_time - duration;
+                        log::trace!("Sleeping for {:?}", sleep);
+                        std::thread::sleep(sleep);
                     }
                 }
             })

@@ -1,5 +1,6 @@
 [audio]
 window = "nuttall"
+conversions = 300
 
 [pulse]
 rate = 8000

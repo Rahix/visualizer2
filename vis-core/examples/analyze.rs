@@ -33,6 +33,7 @@ fn main() {
             info
         },
     )
+    .async_analyzer(300)
     .recorder(
         vis_core::recorder::pulse::PulseBuilder::new()
             .rate(8000)
@@ -41,8 +42,6 @@ fn main() {
             .build(),
     )
     .frames();
-
-    frames.detach_analyzer(300);
 
     for frame in frames.iter() {
         frame.lock_info(|info| {

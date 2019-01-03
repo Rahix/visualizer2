@@ -70,6 +70,7 @@ fn main() {
     let mut frames = {
         // Analyzer {{{
         let mut beat_spectralizer = analyzer::FourierBuilder::new()
+            .window(analyzer::window::nuttall)
             .length(16)
             .downsample(10)
             .plan();
@@ -105,6 +106,13 @@ fn main() {
                 info
             },
         )
+        .async_analyzer(300)
+        .recorder(
+            vis_core::recorder::pulse::PulseBuilder::new()
+                .rate(8000)
+                .read_size(8)
+                .build(),
+        )
         .frames()
         // }}}
     };
@@ -117,28 +125,44 @@ fn main() {
 
     // Columns
     let rows = vis_core::CONFIG.get_or("noa.cols.rows", 50);
-    let cols = vis_core::CONFIG.get_or("noa.cols.num", 20);
+    let cols = vis_core::CONFIG.get_or("noa.cols.num", 30);
     let nrow = cols * 4;
-    let cols_per_note = vis_core::CONFIG.get_or("noa.cols.note_width", 2);
+    let cols_per_note = vis_core::CONFIG.get_or("noa.cols.note_width", 6);
     let notes_num = cols * 2 / cols_per_note;
-    let width = vis_core::CONFIG.get_or("noa.cols.width", 20.0);
+    let width = vis_core::CONFIG.get_or("noa.cols.width", 10.0);
     let depth = vis_core::CONFIG.get_or("noa.cols.depth", 30.0);
     let rowsize = depth / rows as f32;
-    let mid_dist = vis_core::CONFIG.get_or("noa.cols.mid_dist", 0.3);
+    let mid_dist = vis_core::CONFIG.get_or("noa.cols.mid_dist", 0.1);
     let base_height = vis_core::CONFIG.get_or("noa.cols.base_height", 0.2);
-    let base_speed = vis_core::CONFIG.get_or("noa.cols.speed", 0.2);
-    let slowdown = vis_core::CONFIG.get_or("noa.cols.slowdown", 0.99);
-    let speed_deviation = vis_core::CONFIG.get_or("noa.cols.speed_deviation", 1.0);
-    let ampli_top = vis_core::CONFIG.get_or("noa.cols.amp_top", 1.0);
-    let ampli_bottom = vis_core::CONFIG.get_or("noa.cols.amp_bottom", 1.0);
+    let base_speed = vis_core::CONFIG.get_or("noa.cols.speed", 0.1);
+    let slowdown = vis_core::CONFIG.get_or("noa.cols.slowdown", 0.995);
+    let speed_deviation = vis_core::CONFIG.get_or("noa.cols.speed_deviation", 50.0);
+    let ampli_top = vis_core::CONFIG.get_or("noa.cols.amp_top", 0.7);
+    let ampli_bottom = vis_core::CONFIG.get_or("noa.cols.amp_bottom", 0.2);
 
     // Colors
-    let colors: Vec<[f32; 4]> = vis_core::CONFIG.get_or("noa.cols.colors", vec![]);
+    let colors: Vec<[f32; 4]> = vis_core::CONFIG.get_or(
+        "noa.cols.colors",
+        vec![
+            [1.0, 0.007443, 0.318893, 1.0],
+            [0.915586, 0.704283, 0.214133, 1.0],
+            [0.044844, 0.64629, 0.590788, 1.0],
+            [0.130165, 0.022207, 0.27614, 1.0],
+            [1.0, 0.007443, 0.318893, 1.0],
+            [0.915586, 0.704283, 0.214133, 1.0],
+            [0.044844, 0.64629, 0.590788, 1.0],
+            [0.130165, 0.022207, 0.27614, 1.0],
+            [1.0, 0.007443, 0.318893, 1.0],
+            [0.915586, 0.704283, 0.214133, 1.0],
+            [0.044844, 0.64629, 0.590788, 1.0],
+            [0.130165, 0.022207, 0.27614, 1.0],
+        ],
+    );
     let note_roll_size = vis_core::CONFIG.get_or("noa.cols.note_roll", 20) as f32;
 
     // Camera
-    let cam_height = vis_core::CONFIG.get_or("noa.camera.height", 0.2);
-    let cam_look = vis_core::CONFIG.get_or("noa.camera.look_height", 0.2);
+    let cam_height = vis_core::CONFIG.get_or("noa.camera.height", 1.0);
+    let cam_look = vis_core::CONFIG.get_or("noa.camera.look_height", 0.8);
 
     // }}}
 

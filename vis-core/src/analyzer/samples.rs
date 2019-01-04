@@ -2,10 +2,39 @@
 use std::collections;
 use std::sync;
 
+/// Type Alias for Samples
 pub type Sample = f32;
 
 type _SampleBuf = sync::Arc<parking_lot::Mutex<collections::VecDeque<[Sample; 2]>>>;
 
+/// A Sample Buffer
+///
+/// The sample buffer is a synchronized ring-buffer.  During analyzation, it will
+/// be frozen so the view stays constant for that duration.  The sample buffer
+/// should be created by the recorder.
+///
+/// # Example
+/// ```
+/// # use vis_core::analyzer;
+/// # let mut beat = analyzer::BeatBuilder::new()
+/// #     .decay(2000.0)
+/// #     .trigger(0.4)
+/// #     .range(50.0, 100.0)
+/// #     .fourier_length(16)
+/// #     .downsample(10)
+/// #     .rate(8000)
+/// #     .build();
+/// let buffer = analyzer::SampleBuffer::new(32000, 8000);
+///
+/// { // In recorder
+///     buffer.push(&[[1.0, 1.0]; 10]);
+/// }
+///
+/// { // In analyzer
+///     let volume = buffer.volume(0.01);
+///     let isbeat = beat.detect(&buffer);
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct SampleBuffer {
     buf: _SampleBuf,
@@ -13,6 +42,7 @@ pub struct SampleBuffer {
 }
 
 impl SampleBuffer {
+    /// Create a new sample buffer given a size and a record rate
     pub fn new(size: usize, rate: usize) -> SampleBuffer {
         let buf = collections::VecDeque::from(vec![[0.0; 2]; size]);
 
@@ -22,6 +52,7 @@ impl SampleBuffer {
         }
     }
 
+    /// Push a slice of interleaved samples to the buffer
     pub fn push(&self, new: &[[Sample; 2]]) {
         let mut lock = self.buf.lock();
 
@@ -37,6 +68,9 @@ impl SampleBuffer {
         assert_eq!(debug_size, lock.len(), "Sample buffer size differs!");
     }
 
+    /// Lock the buffer and iterate over the last `size` samples (with downsampling)
+    ///
+    /// Set downsampling to `1` if you do not want to use it.
     pub fn iter<'a>(&'a self, size: usize, downsample: usize) -> SampleIterator<'a> {
         let lock = self.buf.lock();
 
@@ -47,6 +81,9 @@ impl SampleBuffer {
         }
     }
 
+    /// Calculate the RMS Volume over the last `length` seconds
+    ///
+    /// Keep `length` short to avoid performance issues
     pub fn volume(&self, length: f32) -> super::SignalStrength {
         use super::SignalStrength;
 

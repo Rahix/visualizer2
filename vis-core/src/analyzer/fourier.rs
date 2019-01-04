@@ -93,17 +93,6 @@ pub mod window {
 }
 
 /// Builder for FourierAnalyzer
-///
-/// # Example
-/// ```
-/// # use vis_core::analyzer::fourier::*;
-/// let analyzer = FourierBuilder::new()
-///     .length(512)
-///     .window(window::nuttall)
-///     .downsample(5)
-///     .rate(8000)
-///     .plan();
-/// ```
 #[derive(Debug, Default)]
 pub struct FourierBuilder {
     /// Length of the fourier transform
@@ -184,6 +173,17 @@ impl FourierBuilder {
 }
 
 /// Fourier Analyzer
+///
+/// # Example
+/// ```
+/// # use vis_core::analyzer::fourier::*;
+/// let analyzer = FourierBuilder::new()
+///     .length(512)
+///     .window(window::nuttall)
+///     .downsample(5)
+///     .rate(8000)
+///     .plan();
+/// ```
 #[derive(Clone)]
 pub struct FourierAnalyzer {
     length: usize,

@@ -6,7 +6,8 @@ const LINES: usize = 200;
 
 #[derive(Debug, Clone)]
 struct AnalyzerResult {
-    spectrum: analyzer::Spectrum<Vec<f32>>,
+    analyzer: analyzer::FourierAnalyzer,
+    average: analyzer::Spectrum<Vec<f32>>,
 }
 
 fn main() {
@@ -39,22 +40,20 @@ fn main() {
     rectangle.set_size(system::Vector2f::new(1.0 / BUCKETS as f32, 1.0));
 
     // Analyzer {{{
-    let mut spectralizer = analyzer::FourierBuilder::new()
+    let mut analyzer = analyzer::FourierBuilder::new()
         .plan();
 
-    let mut avg = analyzer::Spectrum::new(vec![0.0; spectralizer.buckets], 0.0, 1.0);
+    let mut average = analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0);
 
     let mut frames = vis_core::Visualizer::new(
         AnalyzerResult {
-            spectrum: analyzer::Spectrum::new(vec![0.0; BUCKETS], spectralizer.lowest, spectralizer.hightest),
+            analyzer,
+            average,
         },
         move |info, samples| {
-            analyzer::average_spectrum(
-                &mut avg,
-                &spectralizer.analyze(&samples),
-            );
+            info.analyzer.analyze(&samples);
 
-            avg.fill_buckets(&mut info.spectrum.buckets[..]);
+            info.average.fill_from(&info.analyzer.average());
 
             info
         },
@@ -90,9 +89,9 @@ fn main() {
         }
 
         frame.lock_info(|info| {
-            let max = info.spectrum.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+            let max = info.average.max();
 
-            for (i, b) in info.spectrum.iter().enumerate() {
+            for (i, b) in info.average.iter().enumerate() {
                 use sfml::graphics::Transformable;
                 use sfml::graphics::Shape;
 

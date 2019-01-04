@@ -42,21 +42,11 @@ fn main() {
 
     // Analyzer {{{
     let mut frames = {
-        let mut analyzer = analyzer::FourierBuilder::new()
-            .plan();
-
-        let mut average = analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0);
+        let mut analyzer = analyzer::FourierBuilder::new().plan();
+        let mut average = analyzer::Spectrum::new(vec![0.0; analyzer.buckets()], 0.0, 1.0);
 
         // Beat
-        let mut beat_spectralizer = analyzer::FourierBuilder::new()
-            .window(analyzer::window::nuttall)
-            .length(16)
-            .downsample(10)
-            .plan();
-        let mut beat = analyzer::BeatBuilder::new()
-            .decay(2000.0)
-            .trigger(0.4)
-            .build();
+        let mut beat = analyzer::BeatBuilder::new().build();
         let mut beat_num = 0;
 
         vis_core::Visualizer::new(
@@ -70,8 +60,7 @@ fn main() {
 
                 info.average.fill_from(&info.analyzer.average());
 
-                beat_spectralizer.analyze(&samples);
-                if beat.detect(&beat_spectralizer.average().slice(50.0, 100.0)) {
+                if beat.detect(&samples) {
                     beat_num += 1;
                 }
                 info.beat = beat_num;

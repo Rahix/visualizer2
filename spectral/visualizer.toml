@@ -1,5 +1,11 @@
-[audio]
+[audio.fourier]
 window = "nuttall"
+
+[audio.beat]
+decay = 2000.0
+trigger = 0.3
+low = 50.0
+high = 80.0
 
 [pulse]
 read_size = 256

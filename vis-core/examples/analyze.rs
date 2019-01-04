@@ -17,7 +17,7 @@ fn main() {
         .window(vis_core::analyzer::window::nuttall)
         .plan();
 
-    let spectrum = vis_core::analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0);
+    let spectrum = vis_core::analyzer::Spectrum::new(vec![0.0; analyzer.buckets()], 0.0, 1.0);
 
     let mut frames = vis_core::Visualizer::new(
         AnalyzerResult {

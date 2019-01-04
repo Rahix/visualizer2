@@ -92,50 +92,89 @@ pub mod window {
     }
 }
 
+/// Builder for FourierAnalyzer
+///
+/// # Example
+/// ```
+/// # use vis_core::analyzer::fourier::*;
+/// let analyzer = FourierBuilder::new()
+///     .length(512)
+///     .window(window::nuttall)
+///     .downsample(5)
+///     .rate(8000)
+///     .plan();
+/// ```
 #[derive(Debug, Default)]
 pub struct FourierBuilder {
+    /// Length of the fourier transform
+    ///
+    /// Most efficient if this is a power of two
+    ///
+    /// Can also be set from config as `"audio.fourier.length"`.
     pub length: Option<usize>,
+
+    /// Window Function
+    ///
+    /// A few window functions are defined in the [`window`](window/index.html) module.
+    ///
+    /// Can also be set from config as `"audio.fourier.window"`.
     pub window: Option<fn(usize) -> Vec<f32>>,
+
+    /// Downsampling factor
+    ///
+    /// Can also be set from config as `"audio.fourier.downsample"`.
     pub downsample: Option<usize>,
+
+    /// Rate of the captured data
+    ///
+    /// `FourierAnalyzer` will panic if the `SampleBuffer`'s rate does not match.
+    ///
+    /// Can also be set from config as `"audio.rate"`.
     pub rate: Option<usize>,
 }
 
 impl FourierBuilder {
+    /// Create a new FourierBuilder
     pub fn new() -> FourierBuilder {
         Default::default()
     }
 
+    /// Set the length of the transform buffer
     pub fn length(&mut self, length: usize) -> &mut FourierBuilder {
         self.length = Some(length);
         self
     }
 
+    /// Set the window function
     pub fn window(&mut self, f: fn(usize) -> Vec<f32>) -> &mut FourierBuilder {
         self.window = Some(f);
         self
     }
 
+    /// Set the downsampling factor
     pub fn downsample(&mut self, factor: usize) -> &mut FourierBuilder {
         self.downsample = Some(factor);
         self
     }
 
+    /// Set the recording rate of the `SampleBuffer`
     pub fn rate(&mut self, rate: usize) -> &mut FourierBuilder {
         self.rate = Some(rate);
         self
     }
 
+    /// Plan the fourier transform and prepare buffers
     pub fn plan(&mut self) -> FourierAnalyzer {
         let length = self
             .length
-            .unwrap_or_else(|| crate::CONFIG.get_or("audio.fourier_length", 512));
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.fourier.length", 512));
         let window = (self.window.unwrap_or_else(|| {
-            window::from_str(&crate::CONFIG.get_or("audio.window", "none".to_string()))
+            window::from_str(&crate::CONFIG.get_or("audio.fourier.window", "none".to_string()))
                 .expect("Selected window type not found!")
         }))(length);
         let downsample = self
             .downsample
-            .unwrap_or_else(|| crate::CONFIG.get_or("audio.downsample", 5));
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.fourier.downsample", 5));
         let rate = self
             .rate
             .unwrap_or_else(|| crate::CONFIG.get_or("audio.rate", 8000));
@@ -144,16 +183,17 @@ impl FourierBuilder {
     }
 }
 
+/// Fourier Analyzer
 #[derive(Clone)]
 pub struct FourierAnalyzer {
     length: usize,
-    pub buckets: usize,
+    buckets: usize,
     window: Vec<Sample>,
-    pub downsample: usize,
+    downsample: usize,
 
     rate: usize,
-    pub lowest: analyzer::Frequency,
-    pub hightest: analyzer::Frequency,
+    lowest: analyzer::Frequency,
+    highest: analyzer::Frequency,
 
     fft: std::sync::Arc<rustfft::FFT<Sample>>,
 
@@ -169,7 +209,7 @@ impl std::fmt::Debug for FourierAnalyzer {
         write!(
             f,
             "FourierAnalyzer {{ length: {:?}, downsample: {:?}, lowest: {:?}, highest: {:?} }}",
-            self.length, self.downsample, self.lowest, self.hightest,
+            self.length, self.downsample, self.lowest, self.highest,
         )
     }
 }
@@ -183,7 +223,7 @@ impl FourierAnalyzer {
 
         let downsampled_rate = rate as f32 / downsample as f32;
         let lowest = downsampled_rate / length as f32;
-        let hightest = downsampled_rate / 2.0;
+        let highest = downsampled_rate / 2.0;
 
         let fa = FourierAnalyzer {
             length,
@@ -193,7 +233,7 @@ impl FourierAnalyzer {
 
             rate,
             lowest,
-            hightest,
+            highest,
 
             fft,
 
@@ -201,10 +241,10 @@ impl FourierAnalyzer {
             output: vec![rustfft::num_complex::Complex::zero(); length],
 
             spectra: [
-                analyzer::Spectrum::new(vec![0.0; buckets], lowest, hightest),
-                analyzer::Spectrum::new(vec![0.0; buckets], lowest, hightest),
+                analyzer::Spectrum::new(vec![0.0; buckets], lowest, highest),
+                analyzer::Spectrum::new(vec![0.0; buckets], lowest, highest),
             ],
-            average: analyzer::Spectrum::new(vec![0.0; buckets], lowest, hightest),
+            average: analyzer::Spectrum::new(vec![0.0; buckets], lowest, highest),
         };
 
         log::debug!("FourierAnalyzer({:p}):", &fa);
@@ -217,11 +257,32 @@ impl FourierAnalyzer {
             downsample,
         );
         log::debug!("    Lowest  Frequency   = {:8.3} Hz", lowest);
-        log::debug!("    Highest Frequency   = {:8.3} Hz", hightest);
+        log::debug!("    Highest Frequency   = {:8.3} Hz", highest);
 
         fa
     }
 
+    /// Return the number of buckets
+    #[inline]
+    pub fn buckets(&self) -> usize {
+        self.buckets
+    }
+
+    /// Return the frequency of the lowest bucket
+    #[inline]
+    pub fn lowest(&self) -> analyzer::Frequency {
+        self.lowest
+    }
+
+    /// Return the frequency of the highest bucket
+    #[inline]
+    pub fn highest(&self) -> analyzer::Frequency {
+        self.highest
+    }
+
+    /// Analyze a `SampleBuffer`
+    ///
+    /// Returns the left and right channel data as spectra
     pub fn analyze(
         &mut self,
         buf: &analyzer::SampleBuffer,
@@ -257,14 +318,17 @@ impl FourierAnalyzer {
         [self.spectra[0].as_ref(), self.spectra[1].as_ref()]
     }
 
+    /// Get the left channels spectral data from the last transform
     pub fn left(&self) -> analyzer::Spectrum<&[analyzer::SignalStrength]> {
         self.spectra[0].as_ref()
     }
 
+    /// Get the left channels spectral data from the last transform
     pub fn right(&self) -> analyzer::Spectrum<&[analyzer::SignalStrength]> {
         self.spectra[1].as_ref()
     }
 
+    /// Calculate the average spectrum
     pub fn average(&mut self) -> analyzer::Spectrum<&[analyzer::SignalStrength]> {
         analyzer::average_spectrum(&mut self.average, &self.spectra);
 

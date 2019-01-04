@@ -100,10 +100,12 @@ fn main() {
             window.draw(&rect_img);
         }
 
-        frame.lock_info(|info| {
+        frame.info(|info| {
             use sfml::graphics::Shape;
 
             let max = info.average.max();
+            let n50 = info.average.freq_to_id(50.0);
+            let n100 = info.average.freq_to_id(100.0);
 
             let beat = if info.beat > last_beat {
                 last_beat = info.beat;
@@ -119,6 +121,9 @@ fn main() {
                 let int = ((b / max).sqrt() * 255.0) as u8;
                 if !beat {
                     rectangle.set_fill_color(&graphics::Color::rgb(int, int, int));
+                    if i == n50 || i == n100 {
+                        rectangle.set_fill_color(&graphics::Color::rgb(255, 0, 0));
+                    }
                 }
                 rectangle.set_position(system::Vector2f::new(i as f32 / BUCKETS as f32, LINES as f32 - 1.0));
                 window.draw(&rectangle);

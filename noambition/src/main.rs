@@ -69,7 +69,7 @@ fn main() {
 
     let mut frames = {
         // Analyzer {{{
-        let mut beat = analyzer::BeatBuilder::new().decay(2000.0).trigger(0.4).build();
+        let mut beat = analyzer::BeatBuilder::new().build();
         let mut beat_num = 0;
 
         let analyzer = analyzer::FourierBuilder::new().plan();
@@ -358,7 +358,7 @@ fn main() {
         trace!("Delta: {}s", delta);
 
         // Audio Info Retrieval {{{
-        let (volume, maxima, notes_rolling_spectrum, base_volume) = frame.lock_info(|info| {
+        let (volume, maxima, notes_rolling_spectrum, base_volume) = frame.info(|info| {
             rolling_volume = info.volume.max(rolling_volume * slowdown);
 
             if info.beat != last_beat_num {
@@ -438,7 +438,7 @@ fn main() {
             }
 
             // Write spectral information
-            frame.lock_info(|info| {
+            frame.info(|info| {
                 let left = info
                     .analyzer
                     .left()

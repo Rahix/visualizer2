@@ -44,7 +44,7 @@ fn main() {
     .frames();
 
     for frame in frames.iter() {
-        frame.lock_info(|info| {
+        frame.info(|info| {
             for _ in 0..info.volume as usize {
                 print!("#");
             }

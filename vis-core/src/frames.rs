@@ -1,15 +1,39 @@
 use crate::{analyzer, recorder};
 use std::{cell, rc, time};
 
+/// Data for one Frame
 #[derive(Debug)]
 pub struct Frame<R: Send> {
+    /// Timestamp since start
     pub time: f32,
+
+    /// Frame number
     pub frame: usize,
+
     info: rc::Rc<cell::RefCell<triple_buffer::Output<R>>>,
 }
 
 impl<R: Send> Frame<R> {
-    pub fn lock_info<F, O>(&self, f: F) -> O
+    /// Get access to the latest info shared from the analyzer
+    ///
+    /// # Example
+    /// ```
+    /// # vis_core::default_config();
+    /// # let mut frames = vis_core::Visualizer::new(0.0, |i, _s| i)
+    /// #     .frames();
+    /// for frame in frames.iter() {
+    ///     println!("Time: {}", frame.time);
+    ///
+    ///     frame.info(|info|
+    ///         println!("Info: {:?}", info)
+    ///     );
+    /// #
+    /// #     if frame.time > 0.3 {
+    /// #         break;
+    /// #     }
+    /// }
+    /// ```
+    pub fn info<F, O>(&self, f: F) -> O
     where
         F: FnOnce(&R) -> O,
     {
@@ -17,6 +41,7 @@ impl<R: Send> Frame<R> {
     }
 }
 
+/// Frames Iterator
 #[derive(Debug)]
 pub struct Frames<R, A>
 where
@@ -54,6 +79,7 @@ where
         f
     }
 
+    /// Move analyzer to a separate thread
     pub fn detach_analyzer(&mut self, num: usize) {
         let (mut analyzer, mut info) = self.analyzer.take().unwrap();
         let buffer = self.recorder.sample_buffer().clone();
@@ -91,6 +117,7 @@ where
     }
 }
 
+/// Borrowed Frames Iterator
 #[derive(Debug)]
 pub struct FramesIter<'a, R, A>
 where

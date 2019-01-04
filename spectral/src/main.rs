@@ -8,6 +8,7 @@ const LINES: usize = 200;
 struct AnalyzerResult {
     analyzer: analyzer::FourierAnalyzer,
     average: analyzer::Spectrum<Vec<f32>>,
+    beat: usize,
 }
 
 fn main() {
@@ -40,27 +41,49 @@ fn main() {
     rectangle.set_size(system::Vector2f::new(1.0 / BUCKETS as f32, 1.0));
 
     // Analyzer {{{
-    let mut analyzer = analyzer::FourierBuilder::new()
-        .plan();
+    let mut frames = {
+        let mut analyzer = analyzer::FourierBuilder::new()
+            .plan();
 
-    let mut average = analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0);
+        let mut average = analyzer::Spectrum::new(vec![0.0; analyzer.buckets], 0.0, 1.0);
 
-    let mut frames = vis_core::Visualizer::new(
-        AnalyzerResult {
-            analyzer,
-            average,
-        },
-        move |info, samples| {
-            info.analyzer.analyze(&samples);
+        // Beat
+        let mut beat_spectralizer = analyzer::FourierBuilder::new()
+            .window(analyzer::window::nuttall)
+            .length(16)
+            .downsample(10)
+            .plan();
+        let mut beat = analyzer::BeatBuilder::new()
+            .decay(2000.0)
+            .trigger(0.4)
+            .build();
+        let mut beat_num = 0;
 
-            info.average.fill_from(&info.analyzer.average());
+        vis_core::Visualizer::new(
+            AnalyzerResult {
+                analyzer,
+                average,
+                beat: 0,
+            },
+            move |info, samples| {
+                info.analyzer.analyze(&samples);
 
-            info
-        },
-    )
-    .frames();
+                info.average.fill_from(&info.analyzer.average());
+
+                beat_spectralizer.analyze(&samples);
+                if beat.detect(&beat_spectralizer.average().slice(50.0, 100.0)) {
+                    beat_num += 1;
+                }
+                info.beat = beat_num;
+
+                info
+            },
+        )
+        .frames()
+    };
     // }}}
 
+    let mut last_beat = 0;
     'main: for frame in frames.iter() {
         log::trace!("Frame: {:7}@{:.3}", frame.frame, frame.time);
 
@@ -89,14 +112,25 @@ fn main() {
         }
 
         frame.lock_info(|info| {
+            use sfml::graphics::Shape;
+
             let max = info.average.max();
+
+            let beat = if info.beat > last_beat {
+                last_beat = info.beat;
+                rectangle.set_fill_color(&graphics::Color::rgb(255, 255, 255));
+                true
+            } else {
+                false
+            };
 
             for (i, b) in info.average.iter().enumerate() {
                 use sfml::graphics::Transformable;
-                use sfml::graphics::Shape;
 
                 let int = ((b / max).sqrt() * 255.0) as u8;
-                rectangle.set_fill_color(&graphics::Color::rgb(int, int, int));
+                if !beat {
+                    rectangle.set_fill_color(&graphics::Color::rgb(int, int, int));
+                }
                 rectangle.set_position(system::Vector2f::new(i as f32 / BUCKETS as f32, LINES as f32 - 1.0));
                 window.draw(&rectangle);
             }

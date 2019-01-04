@@ -131,12 +131,11 @@ pub struct BeatDetector {
 impl BeatDetector {
     /// Create a BeatDetector from a builder config
     pub fn from_builder(build: &BeatBuilder) -> BeatDetector {
+        let decay = build
+            .decay
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.beat.decay", 2000.0));
         BeatDetector {
-            decay: 1.0
-                - 1.0
-                    / build
-                        .decay
-                        .unwrap_or_else(|| crate::CONFIG.get_or("audio.beat.decay", 2000.0)),
+            decay: 1.0 - 1.0 / decay,
             trigger: build
                 .trigger
                 .unwrap_or_else(|| crate::CONFIG.get_or("audio.beat.trigger", 0.4)),

@@ -71,10 +71,10 @@ impl BeatDetector {
                 - 1.0
                     / build
                         .decay
-                        .unwrap_or_else(|| crate::CONFIG.get_or("audio.beat.decay", 1000.0)),
+                        .unwrap_or_else(|| crate::CONFIG.get_or("audio.beat.decay", 2000.0)),
             trigger: build
                 .trigger
-                .unwrap_or_else(|| crate::CONFIG.get_or("audio.beat.trigger", 0.5)),
+                .unwrap_or_else(|| crate::CONFIG.get_or("audio.beat.trigger", 0.4)),
             range: build.range.unwrap_or_else(|| {
                 (
                     crate::CONFIG.get_or("audio.beat.low", 50.0),

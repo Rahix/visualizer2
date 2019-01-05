@@ -16,22 +16,82 @@ pub trait Recorder: std::fmt::Debug {
     ///
     /// Async recorders (eg. pulse) will always return true
     /// and ignore this call otherwise
-    fn sync(&mut self, time: f32) -> bool {
+    fn sync(&mut self, _time: f32) -> bool {
         true
     }
 }
 
-pub fn from_str(name: &str) -> Option<Box<dyn Recorder>> {
-    match name {
-        #[cfg(feature = "pulseaudio")]
-        "pulse" => Some(pulse::PulseBuilder::new().build()),
-        #[cfg(feature = "cpalrecord")]
-        "cpal" => Some(cpal::CPalBuilder::new().build()),
-        _ => None,
-    }
+#[derive(Debug, Clone, Default)]
+pub struct RecorderBuilder {
+    pub rate: Option<usize>,
+    pub buffer_size: Option<usize>,
+    pub read_size: Option<usize>,
+    pub recorder: Option<String>,
 }
 
-pub fn default() -> Box<dyn Recorder> {
-    from_str(&crate::CONFIG.get_or("audio.recorder", "cpal".to_string()))
-        .expect("Recorder not found")
+impl RecorderBuilder {
+    pub fn new() -> RecorderBuilder {
+        Default::default()
+    }
+
+    pub fn rate(&mut self, rate: usize) -> &mut RecorderBuilder {
+        self.rate = Some(rate);
+        self
+    }
+
+    pub fn buffer_size(&mut self, buffer_size: usize) -> &mut RecorderBuilder {
+        self.buffer_size = Some(buffer_size);
+        self
+    }
+
+    pub fn read_size(&mut self, read_size: usize) -> &mut RecorderBuilder {
+        self.read_size = Some(read_size);
+        self
+    }
+
+    pub fn recorder<S: Into<String>>(&mut self, rec: S) -> &mut RecorderBuilder {
+        self.recorder = Some(rec.into());
+        self
+    }
+
+    pub fn build(&mut self) -> Box<dyn Recorder> {
+        let rate = self
+            .rate
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.rate", 8000));
+        let buffer_size = self
+            .buffer_size
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.buffer", 16000));
+        let read_size = self
+            .read_size
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.read_size", 32));
+        let recorder = self
+            .recorder
+            .as_ref()
+            .map(|s| s.clone())
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.recorder", "cpal".to_string()));
+
+        match &*recorder {
+            #[cfg(feature = "cpalrecord")]
+            "cpal" => self::cpal::CPalBuilder {
+                rate: Some(rate),
+                buffer_size: Some(buffer_size),
+                read_size: Some(read_size),
+                ..Default::default()
+            }
+            .build(),
+
+            #[cfg(feature = "pulseaudio")]
+            "pulse" => self::cpal::PulseBuilder {
+                rate: Some(rate),
+                buffer_size: Some(buffer_size),
+                read_size: Some(read_size),
+                ..Default::default()
+            }
+            .build(),
+
+            _ => {
+                panic!("Recorder type does not exist!");
+            }
+        }
+    }
 }

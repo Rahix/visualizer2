@@ -63,7 +63,9 @@ where
         let mut f = Frames {
             info: rc::Rc::new(cell::RefCell::new(outp)),
             analyzer: Some((vis.analyzer, inp)),
-            recorder: vis.recorder.unwrap_or_else(|| recorder::default()),
+            recorder: vis
+                .recorder
+                .unwrap_or_else(|| recorder::RecorderBuilder::new().build()),
         };
 
         if let Some(num) = vis.async_analyzer {

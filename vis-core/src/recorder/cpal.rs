@@ -5,6 +5,7 @@ use std::thread;
 pub struct CPalBuilder {
     pub rate: Option<usize>,
     pub buffer_size: Option<usize>,
+    pub read_size: Option<usize>,
 }
 
 impl CPalBuilder {
@@ -19,6 +20,11 @@ impl CPalBuilder {
 
     pub fn buffer_size(&mut self, buffer_size: usize) -> &mut CPalBuilder {
         self.buffer_size = Some(buffer_size);
+        self
+    }
+
+    pub fn read_size(&mut self, read_size: usize) -> &mut CPalBuilder {
+        self.read_size = Some(read_size);
         self
     }
 
@@ -43,7 +49,7 @@ impl CPalRecorder {
 
         {
             let buf = buf.clone();
-            let mut chunk_buffer = vec![[0.0; 2]; 64];
+            let mut chunk_buffer = vec![[0.0; 2]; 256];
 
             thread::Builder::new()
                 .name("cpal-recorder".into())

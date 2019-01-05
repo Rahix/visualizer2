@@ -97,12 +97,6 @@ fn main() {
             },
         )
         .async_analyzer(300)
-        .recorder(
-            vis_core::recorder::pulse::PulseBuilder::new()
-                .rate(8000)
-                .read_size(8)
-                .build(),
-        )
         .frames()
         // }}}
     };

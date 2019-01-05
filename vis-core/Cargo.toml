@@ -12,14 +12,19 @@ log = "0.4.6"
 parking_lot = "0.7.0"
 rustfft = "2.1.0"
 
-[dependencies.triple_buffer]
-version = "4.0.0"
-features = ["raw"]
+[dependencies.cpal]
+optional = true
+version = "0.8.2"
 
 [dependencies.pulse-simple]
 optional = true
 version = "1.0.1"
 
+[dependencies.triple_buffer]
+features = ["raw"]
+version = "4.0.0"
+
 [features]
-default = ["pulseaudio"]
+default = ["cpalrecord"]
 pulseaudio = ["pulse-simple"]
+cpalrecord = ["cpal"]

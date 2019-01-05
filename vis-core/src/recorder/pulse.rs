@@ -98,8 +98,4 @@ impl super::Recorder for PulseRecorder {
     fn sample_buffer<'a>(&'a self) -> &'a analyzer::SampleBuffer {
         &self.buffer
     }
-
-    fn sync(&mut self, _time: f32) -> bool {
-        true
-    }
 }

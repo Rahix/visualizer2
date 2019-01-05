@@ -1,6 +1,9 @@
 #[cfg(feature = "pulseaudio")]
 pub mod pulse;
 
+#[cfg(feature = "cpalrecord")]
+pub mod cpal;
+
 use crate::analyzer;
 
 pub trait Recorder: std::fmt::Debug {
@@ -13,16 +16,22 @@ pub trait Recorder: std::fmt::Debug {
     ///
     /// Async recorders (eg. pulse) will always return true
     /// and ignore this call otherwise
-    fn sync(&mut self, time: f32) -> bool;
+    fn sync(&mut self, time: f32) -> bool {
+        true
+    }
 }
 
 pub fn from_str(name: &str) -> Option<Box<dyn Recorder>> {
     match name {
+        #[cfg(feature = "pulseaudio")]
         "pulse" => Some(pulse::PulseBuilder::new().build()),
+        #[cfg(feature = "cpalrecord")]
+        "cpal" => Some(cpal::CPalBuilder::new().build()),
         _ => None,
     }
 }
 
 pub fn default() -> Box<dyn Recorder> {
-    from_str(crate::CONFIG.get_or("audio.recorder", "pulse")).expect("Recorder not found")
+    from_str(&crate::CONFIG.get_or("audio.recorder", "cpal".to_string()))
+        .expect("Recorder not found")
 }

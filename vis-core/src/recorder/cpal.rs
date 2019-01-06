@@ -82,6 +82,7 @@ impl CPalRecorder {
                     log::debug!("    Sample Rate = {:6}", rate);
                     log::debug!("    Read Size   = {:6}", read_size);
                     log::debug!("    Buffer Size = {:6}", buffer_size);
+                    log::debug!("    Device      = \"{}\"", device.name());
 
                     event_loop.run(|_, data| match data {
                         cpal::StreamData::Input {
@@ -94,7 +95,7 @@ impl CPalRecorder {
                                 {
                                     match p {
                                         (ref mut b, [l, r]) => **b = [*l, *r],
-                                        _ => panic!("Slice has wrong length!"),
+                                        _ => unreachable!(),
                                     }
                                 }
 

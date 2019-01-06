@@ -101,6 +101,11 @@ impl PulseRecorder {
                     log::debug!("    Sample Rate = {:6}", rate);
                     log::debug!("    Read Size   = {:6}", read_size);
                     log::debug!("    Buffer Size = {:6}", buffer_size);
+                    if let Some(ref name) = device {
+                        log::debug!("    Device      = \"{}\"", name);
+                    } else {
+                        log::debug!("    Device      = \"default\"");
+                    }
 
                     loop {
                         rec.read(&mut read_buf);

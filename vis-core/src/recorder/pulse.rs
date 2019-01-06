@@ -6,6 +6,8 @@ pub struct PulseBuilder {
     pub rate: Option<usize>,
     pub read_size: Option<usize>,
     pub buffer_size: Option<usize>,
+    pub name: Option<(String, String)>,
+    pub device: Option<String>,
 }
 
 impl PulseBuilder {
@@ -25,6 +27,20 @@ impl PulseBuilder {
 
     pub fn buffer_size(&mut self, size: usize) -> &mut PulseBuilder {
         self.buffer_size = Some(size);
+        self
+    }
+
+    pub fn name<S1, S2>(&mut self, name: S1, desc: S2) -> &mut PulseBuilder
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+    {
+        self.name = Some((name.into(), desc.into()));
+        self
+    }
+
+    pub fn device<S: Into<String>>(&mut self, dev: S) -> &mut PulseBuilder {
+        self.device = Some(dev.into());
         self
     }
 
@@ -54,6 +70,14 @@ impl PulseRecorder {
         let read_size = build
             .buffer_size
             .unwrap_or_else(|| crate::CONFIG.get_or("audio.read_size", 32));
+        let (name, desc) = build.name.clone().unwrap_or((
+            "visualizer2".to_string(),
+            "Pulseaudio recorder for visualizer2".to_string(),
+        ));
+        let device = build
+            .device
+            .clone()
+            .or_else(|| crate::CONFIG.get("pulse.device"));
 
         let buf = analyzer::SampleBuffer::new(buffer_size, rate);
 
@@ -65,9 +89,9 @@ impl PulseRecorder {
                 .spawn(move || {
                     let rec: pulse_simple::Record<[analyzer::Sample; 2]> =
                         pulse_simple::Record::new(
-                            "visualizer2",
-                            "Pulseaudio recorder for visualizer2",
-                            None,
+                            &name,
+                            &desc,
+                            device.as_ref().map(|s| s.as_str()),
                             rate as u32,
                         );
 

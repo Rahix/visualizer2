@@ -124,6 +124,9 @@ fn main() {
     let ampli_top = vis_core::CONFIG.get_or("noa.cols.amp_top", 0.7);
     let ampli_bottom = vis_core::CONFIG.get_or("noa.cols.amp_bottom", 0.2);
 
+    let frame_time =
+        std::time::Duration::from_micros(1000000 / vis_core::CONFIG.get_or("noa.fps", 30));
+
     // Colors
     let colors: Vec<[f32; 4]> = vis_core::CONFIG.get_or(
         "noa.cols.colors",
@@ -348,6 +351,7 @@ fn main() {
     'main: for frame in frames.iter() {
         use glium::Surface;
 
+        let start = std::time::Instant::now();
         let delta = frame.time - previous_time;
         trace!("Delta: {}s", delta);
 
@@ -439,7 +443,7 @@ fn main() {
                     .slice(100.0, 800.0)
                     .fill_buckets(&mut row_spectrum[..]);
                 let row_offset = nrow * write_row;
-                let max = left.max();
+                let max = left.max() + 0.0001;
                 for (i, v) in left.iter().enumerate() {
                     lines_buf[row_offset + i * 2 + 1].position[2] =
                         base_height / 2.0 + v / max * ampli_top;
@@ -453,7 +457,7 @@ fn main() {
                     .slice(100.0, 800.0)
                     .fill_buckets(&mut row_spectrum[..]);
                 let row_offset = nrow * write_row + cols * 2;
-                let max = right.max();
+                let max = right.max() + 0.0001;
                 for (i, v) in right.iter().enumerate() {
                     lines_buf[row_offset + i * 2 + 1].position[2] =
                         base_height / 2.0 + v / max * ampli_top;
@@ -606,5 +610,12 @@ fn main() {
 
         previous_time = frame.time;
         previous_offset = offset;
+
+        let end = std::time::Instant::now();
+        let dur = end - start;
+        if dur < frame_time {
+            let sleep = frame_time - dur;
+            std::thread::sleep(sleep);
+        }
     }
 }

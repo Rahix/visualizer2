@@ -1,10 +1,12 @@
 [audio]
 window = "nuttall"
 conversions = 300
-
-[pulse]
 rate = 8000
-read_size = 8
+read_size = 256
+recorder = "cpal"
+
+[noa]
+fps = 40
 
 [noa.cols]
 rows = 50

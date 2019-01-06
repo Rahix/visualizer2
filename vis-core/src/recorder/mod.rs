@@ -55,15 +55,6 @@ impl RecorderBuilder {
     }
 
     pub fn build(&mut self) -> Box<dyn Recorder> {
-        let rate = self
-            .rate
-            .unwrap_or_else(|| crate::CONFIG.get_or("audio.rate", 8000));
-        let buffer_size = self
-            .buffer_size
-            .unwrap_or_else(|| crate::CONFIG.get_or("audio.buffer", 16000));
-        let read_size = self
-            .read_size
-            .unwrap_or_else(|| crate::CONFIG.get_or("audio.read_size", 32));
         let recorder = self
             .recorder
             .as_ref()
@@ -73,18 +64,18 @@ impl RecorderBuilder {
         match &*recorder {
             #[cfg(feature = "cpalrecord")]
             "cpal" => self::cpal::CPalBuilder {
-                rate: Some(rate),
-                buffer_size: Some(buffer_size),
-                read_size: Some(read_size),
+                rate: self.rate,
+                buffer_size: self.buffer_size,
+                read_size: self.read_size,
                 ..Default::default()
             }
             .build(),
 
             #[cfg(feature = "pulseaudio")]
-            "pulse" => self::cpal::PulseBuilder {
-                rate: Some(rate),
-                buffer_size: Some(buffer_size),
-                read_size: Some(read_size),
+            "pulse" => self::pulse::PulseBuilder {
+                rate: self.rate,
+                buffer_size: self.buffer_size,
+                read_size: self.read_size,
                 ..Default::default()
             }
             .build(),

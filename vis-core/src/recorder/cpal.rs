@@ -28,11 +28,11 @@ impl CPalBuilder {
         self
     }
 
-    pub fn create(&mut self) -> CPalRecorder {
-        CPalRecorder::new(8000, 16000)
+    pub fn create(&self) -> CPalRecorder {
+        CPalRecorder::from_builder(self)
     }
 
-    pub fn build(&mut self) -> Box<dyn super::Recorder> {
+    pub fn build(&self) -> Box<dyn super::Recorder> {
         Box::new(self.create())
     }
 }
@@ -44,12 +44,22 @@ pub struct CPalRecorder {
 }
 
 impl CPalRecorder {
-    fn new(rate: usize, buffer_size: usize) -> CPalRecorder {
+    fn from_builder(build: &CPalBuilder) -> CPalRecorder {
+        let rate = build
+            .rate
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.rate", 8000));
+        let buffer_size = build
+            .buffer_size
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.buffer", 16000));
+        let read_size = build
+            .buffer_size
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.read_size", 256));
+
         let buf = analyzer::SampleBuffer::new(buffer_size, rate);
 
         {
             let buf = buf.clone();
-            let mut chunk_buffer = vec![[0.0; 2]; 256];
+            let mut chunk_buffer = vec![[0.0; 2]; read_size];
 
             thread::Builder::new()
                 .name("cpal-recorder".into())
@@ -67,6 +77,11 @@ impl CPalRecorder {
                         .build_input_stream(&device, &format)
                         .expect("Failed to build input stream");
                     event_loop.play_stream(stream_id);
+
+                    log::debug!("CPal:");
+                    log::debug!("    Sample Rate = {:6}", rate);
+                    log::debug!("    Read Size   = {:6}", read_size);
+                    log::debug!("    Buffer Size = {:6}", buffer_size);
 
                     event_loop.run(|_, data| match data {
                         cpal::StreamData::Input {

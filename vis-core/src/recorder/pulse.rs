@@ -28,23 +28,11 @@ impl PulseBuilder {
         self
     }
 
-    pub fn create(&mut self) -> PulseRecorder {
-        let rate = self
-            .rate
-            .unwrap_or_else(|| crate::CONFIG.get_or("audio.rate", 8000));
-
-        let read_size = self
-            .read_size
-            .unwrap_or_else(|| crate::CONFIG.get_or("pulse.read_size", 512));
-
-        let buffer_size = self
-            .buffer_size
-            .unwrap_or_else(|| crate::CONFIG.get_or("pulse.buffer", 8000));
-
-        PulseRecorder::new(rate, read_size, buffer_size)
+    pub fn create(&self) -> PulseRecorder {
+        PulseRecorder::from_builder(self)
     }
 
-    pub fn build(&mut self) -> Box<dyn super::Recorder> {
+    pub fn build(&self) -> Box<dyn super::Recorder> {
         Box::new(self.create())
     }
 }
@@ -56,7 +44,17 @@ pub struct PulseRecorder {
 }
 
 impl PulseRecorder {
-    fn new(rate: usize, read_size: usize, buffer_size: usize) -> PulseRecorder {
+    fn from_builder(build: &PulseBuilder) -> PulseRecorder {
+        let rate = build
+            .rate
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.rate", 8000));
+        let buffer_size = build
+            .buffer_size
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.buffer", 16000));
+        let read_size = build
+            .buffer_size
+            .unwrap_or_else(|| crate::CONFIG.get_or("audio.read_size", 32));
+
         let buf = analyzer::SampleBuffer::new(buffer_size, rate);
 
         {

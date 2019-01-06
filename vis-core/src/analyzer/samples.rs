@@ -38,7 +38,7 @@ type _SampleBuf = sync::Arc<parking_lot::Mutex<collections::VecDeque<[Sample; 2]
 #[derive(Debug, Clone)]
 pub struct SampleBuffer {
     buf: _SampleBuf,
-    pub rate: usize,
+    rate: usize,
 }
 
 impl SampleBuffer {
@@ -50,6 +50,11 @@ impl SampleBuffer {
             buf: sync::Arc::new(parking_lot::Mutex::new(buf)),
             rate,
         }
+    }
+
+    #[inline]
+    pub fn rate(&self) -> usize {
+        self.rate
     }
 
     /// Push a slice of interleaved samples to the buffer

@@ -23,7 +23,7 @@ macro_rules! shader_program {
             };
 
             let frag_src = {
-                use ::std::io::Read;
+                use std::io::Read;
                 let mut buf = String::new();
                 let mut f = std::fs::File::open(format!("src/{}", $frag_file)).unwrap();
                 f.read_to_string(&mut buf).unwrap();

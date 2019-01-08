@@ -289,7 +289,11 @@ impl FourierAnalyzer {
     ) -> [analyzer::Spectrum<&[analyzer::SignalStrength]>; 2] {
         log::trace!("FourierAnalyzer({:p}): Analyzing ...", &self);
 
-        assert_eq!(buf.rate(), self.rate, "Samplerate of buffer does not match!");
+        assert_eq!(
+            buf.rate(),
+            self.rate,
+            "Samplerate of buffer does not match!"
+        );
 
         // Copy samples to left and right buffer
         self.input[0].clear();

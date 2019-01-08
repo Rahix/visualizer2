@@ -1,5 +1,5 @@
+use sfml::{graphics, system};
 use vis_core::analyzer;
-use sfml::{system, graphics};
 
 const BUCKETS: usize = 200;
 const LINES: usize = 200;
@@ -19,14 +19,14 @@ fn main() {
 
     let context_settings = sfml::window::ContextSettings {
         antialiasing_level: 4,
-        .. Default::default()
+        ..Default::default()
     };
 
     let mut window = sfml::graphics::RenderWindow::new(
         (1600, 800),
         "Visualizer2 Spectrum Display",
         sfml::window::Style::CLOSE,
-        &context_settings
+        &context_settings,
     );
     window.set_vertical_sync_enabled(true);
     window.clear(&graphics::Color::BLACK);
@@ -82,7 +82,8 @@ fn main() {
             match event {
                 Event::Closed => break 'main,
                 Event::KeyPressed {
-                    code: sfml::window::Key::Escape, ..
+                    code: sfml::window::Key::Escape,
+                    ..
                 } => break 'main,
                 _ => (),
             }
@@ -125,7 +126,10 @@ fn main() {
                         rectangle.set_fill_color(&graphics::Color::rgb(255, 0, 0));
                     }
                 }
-                rectangle.set_position(system::Vector2f::new(i as f32 / BUCKETS as f32, LINES as f32 - 1.0));
+                rectangle.set_position(system::Vector2f::new(
+                    i as f32 / BUCKETS as f32,
+                    LINES as f32 - 1.0,
+                ));
                 window.draw(&rectangle);
             }
         });

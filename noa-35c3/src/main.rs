@@ -331,7 +331,12 @@ fn main() {
     // }}}
 
     // Image {{{
-    let image = image::load(std::io::Cursor::new(&include_bytes!("logo.png")[..]), image::PNG).unwrap().to_rgba();
+    let image = image::load(
+        std::io::Cursor::new(&include_bytes!("logo.png")[..]),
+        image::PNG,
+    )
+    .unwrap()
+    .to_rgba();
     let image_dims = image.dimensions();
     let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dims);
     let c3_texture = glium::texture::CompressedSrgbTexture2d::new(&display, image).unwrap();
@@ -558,9 +563,17 @@ fn main() {
             beat: beat_rolling,
         };
 
-        fa.draw(&quad_verts, &quad_inds, &background_program, &ua, &draw_params).unwrap();
+        fa.draw(
+            &quad_verts,
+            &quad_inds,
+            &background_program,
+            &ua,
+            &draw_params,
+        )
+        .unwrap();
         let (fa, ua, fb, ub) = (fb, ub, fa, ua);
-        fa.draw(&quad_verts, &quad_inds, &color_program, &ua, &draw_params).unwrap();
+        fa.draw(&quad_verts, &quad_inds, &color_program, &ua, &draw_params)
+            .unwrap();
         #[allow(unused_variables)]
         let (fa, ua, fb, ub) = (fb, ub, fa, ua);
         // }}}

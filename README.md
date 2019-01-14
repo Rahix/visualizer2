@@ -95,11 +95,13 @@ The *analyzer* consists of a closure and a data-type that contains all info shar
 * While the analyzer gets an `&mut info`, you can **not** make any assumptions
   about its contents apart from it being filled with either the initial value
   or the result of *some* (most likely **not** the last!) analyzer run.
+* If you need data from the last analyzer run, you have to keep track of that locally,
+  easiest by capturing a variable in the analyzer closure.
 
 ### Renderer
 This part is completely up to you.  `vis-core` gives you an iterator that you should trigger
-at least once a frame and that allows access to the info from the analyzer, but how you do that
-is up to you.  In most cases you will be using a loop like this:
+once a frame and that allows access to the info from the analyzer.  In most cases you will
+be using a loop like this:
 
 ```rust
 for frame in frames.iter() {
@@ -107,7 +109,6 @@ for frame in frames.iter() {
     println!("Time since start: {}", frame.time);
 }
 ```
-
 
 ## Configuration
 During the process of writing multiple different versions of this system I also wrote
@@ -152,3 +153,7 @@ more info:
   multiple spectra.
 * [`BeatDetector`](./vis-core/src/analyzer/beat.rs) - A beat detector that allows triggering certain
   effects as soon as a beat happens.  Tries to introduce as little delay as possible!
+
+## License
+
+*visualizer2* is licensed under the `GNU General Public License v3.0 or later`.  See [LICENSE](LICENSE) for more info.

@@ -5,6 +5,27 @@ Audio-Visualization in Rust.  *visualizer2* is my second (actually third) attemp
 visuals that somehow behave in sync with a live audio signal.  The first attempt can be found
 [here](https://github.com/Rahix/pa-visualizer).
 
+## Visualizers
+There are a few ready to use visualizers in this repository:
+
+### noambition
+Based on the *noambition* visualizer from [pa-visualizer](https://github.com/Rahix/pa-visualizer),
+which in turn is based on the demo [No Ambition](http://www.pouet.net/prod.php?which=69730) by Quite & T-Rex.
+That said, this version no longer has a lot of similarities ...
+
+![noambition preview](img/noambition.png)
+
+### noa-35c3
+Version of *noambition* that was adapted for 35c3.
+
+![noa-35c3 preview](img/noa-35c3.png)
+
+### spectral
+A debug spectral display.
+
+![spectral preview](img/spectral.png)
+
+## Project Structure
 The core concept of *visualizer2* is the following:  The [`vis-core`](./vis-core) crate contains all
 the glue logic and building blocks for analyzing the audio signal.  The goal is that creating a new
 visualizer needs as little boilerplate as possible.  In practice, the following code is all you
@@ -71,8 +92,7 @@ fn main() {
 }
 ```
 
-## Basic Design
-
+## Architecture
 In live mode, *visualizer2* runs three loops:
 
 1. The **recorder**, which acquires samples from somewhere (pulseaudio by default) and pushes

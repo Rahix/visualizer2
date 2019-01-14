@@ -4,7 +4,9 @@ pub mod helpers;
 pub mod recorder;
 pub mod visualizer;
 
+#[doc(inline)]
 pub use crate::frames::Frames;
+#[doc(inline)]
 pub use crate::visualizer::Visualizer;
 
 /// `ezconf` configuration

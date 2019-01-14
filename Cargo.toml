@@ -9,4 +9,5 @@ members = [
     "vis-core",
     "spectral",
     "noambition",
+    "noa-35c3",
 ]

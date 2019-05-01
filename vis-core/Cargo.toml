@@ -11,10 +11,12 @@ ezconf = "0.3.0"
 log = "0.4.6"
 parking_lot = "0.7.0"
 rustfft = "2.1.0"
+color-backtrace = "0.1.3"
 
 [dependencies.cpal]
 optional = true
-version = "0.8.2"
+git = "https://github.com/tomaka/cpal"
+rev = "0354548426f7b4c48392cae9876a3e77ea5c1c40"
 
 [dependencies.pulse-simple]
 optional = true

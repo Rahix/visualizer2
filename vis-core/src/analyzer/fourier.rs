@@ -195,7 +195,7 @@ pub struct FourierAnalyzer {
     lowest: analyzer::Frequency,
     highest: analyzer::Frequency,
 
-    fft: std::sync::Arc<rustfft::FFT<Sample>>,
+    fft: std::sync::Arc<dyn rustfft::FFT<Sample>>,
 
     input: [Vec<rustfft::num_complex::Complex<Sample>>; 2],
     output: Vec<rustfft::num_complex::Complex<Sample>>,

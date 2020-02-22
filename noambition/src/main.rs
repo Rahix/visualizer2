@@ -52,7 +52,12 @@ struct Vertex {
     color_id: u16,
 }
 
-glium::implement_vertex!(Vertex, position, color_id);
+#[allow(deprecated)]
+pub mod _vertex_impl {
+    use super::Vertex;
+
+    glium::implement_vertex!(Vertex, position, color_id);
+}
 
 #[derive(Debug, Clone)]
 pub struct VisInfo {
@@ -225,6 +230,7 @@ fn main() {
     // Buffers {{{
 
     // Quad {{{
+    #[allow(deprecated)]
     let quad_verts = {
         #[derive(Copy, Clone)]
         struct Vertex {

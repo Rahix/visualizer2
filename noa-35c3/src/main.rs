@@ -7,6 +7,8 @@ extern crate nalgebra as na;
 use glium::glutin;
 use vis_core::analyzer;
 
+use glutin::platform::run_return::EventLoopExtRunReturn;
+
 macro_rules! shader_program {
     // {{{
     ($display:expr, $vert_file:expr, $frag_file:expr) => {{
@@ -152,15 +154,17 @@ fn main() {
     // }}}
 
     // Window Initialization {{{
-    let mut events_loop = glutin::EventsLoop::new();
-    let window = glutin::WindowBuilder::new()
-        .with_dimensions(glutin::dpi::LogicalSize::new(
+    let mut events_loop = glutin::event_loop::EventLoop::new();
+    let window = glutin::window::WindowBuilder::new()
+        .with_inner_size(glutin::dpi::LogicalSize::new(
             window_width as f64,
             window_height as f64,
         ))
         .with_maximized(true)
         .with_decorations(false)
-        .with_fullscreen(Some(events_loop.get_primary_monitor()))
+        .with_fullscreen(Some(glutin::window::Fullscreen::Borderless(Some(
+            events_loop.primary_monitor().expect("No primary monitor"),
+        ))))
         .with_title("Visualizer2 - NoAmbition");
 
     let context = glutin::ContextBuilder::new()
@@ -603,20 +607,23 @@ fn main() {
 
         // Events {{{
         let mut closed = false;
-        events_loop.poll_events(|ev| match ev {
-            glutin::Event::WindowEvent { event, .. } => match event {
-                glutin::WindowEvent::CloseRequested => closed = true,
-                glutin::WindowEvent::KeyboardInput {
-                    input:
-                        glutin::KeyboardInput {
-                            virtual_keycode: Some(glutin::VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => closed = true,
+        events_loop.run_return(|ev, _, control_flow| {
+            match ev {
+                glutin::event::Event::WindowEvent { event, .. } => match event {
+                    glutin::event::WindowEvent::CloseRequested => closed = true,
+                    glutin::event::WindowEvent::KeyboardInput {
+                        input:
+                            glutin::event::KeyboardInput {
+                                virtual_keycode: Some(glutin::event::VirtualKeyCode::Escape),
+                                ..
+                            },
+                        ..
+                    } => closed = true,
+                    _ => (),
+                },
                 _ => (),
-            },
-            _ => (),
+            }
+            *control_flow = glutin::event_loop::ControlFlow::Exit;
         });
         if closed {
             break 'main;

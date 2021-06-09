@@ -5,7 +5,7 @@ name = "noambition"
 version = "0.1.0"
 
 [dependencies]
-glium = "0.22.0"
+glium = "0.29.1"
 image = "0.20.1"
 log = "0.4.6"
 nalgebra = "0.16.9"

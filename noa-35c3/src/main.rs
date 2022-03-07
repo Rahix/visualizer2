@@ -163,7 +163,9 @@ fn main() {
         .with_maximized(true)
         .with_decorations(false)
         .with_fullscreen(Some(glutin::window::Fullscreen::Borderless(Some(
-            events_loop.primary_monitor().expect("No primary monitor"),
+            events_loop
+                .primary_monitor()
+                .unwrap_or_else(|| events_loop.available_monitors().next().unwrap()),
         ))))
         .with_title("Visualizer2 - NoAmbition");
 

@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate log;
 extern crate nalgebra as na;
+use midir::{MidiOutput, MidiOutputPort};
+use std::io::{stdin, stdout, Write};
 
 use vis_core::analyzer;
 
@@ -82,6 +84,34 @@ fn main() {
 
     // }}}
 
+    let midi_out = MidiOutput::new("My Test Output").unwrap();
+
+    // Get an output port (read from console if multiple are available)
+    let out_ports = midi_out.ports();
+    let out_port: &MidiOutputPort = match out_ports.len() {
+        0 => panic!("no output port found"),
+        1 => {
+            println!("Choosing the only available output port: {}", midi_out.port_name(&out_ports[0]).unwrap());
+            &out_ports[0]
+        },
+        _ => {
+            println!("\nAvailable output ports:");
+            for (i, p) in out_ports.iter().enumerate() {
+                println!("{}: {}", i, midi_out.port_name(p).unwrap());
+            }
+            print!("Please select output port: ");
+            stdout().flush().unwrap();
+            let mut input = String::new();
+            stdin().read_line(&mut input).unwrap();
+            out_ports.get(input.trim().parse::<usize>().unwrap())
+                     .ok_or("invalid output port selected").unwrap()
+        }
+    };
+
+    println!("\nOpening connection");
+    let mut conn_out = midi_out.connect(out_port, "midir-test").unwrap();
+    println!("Connection open. Listen!");
+
     let mut previous_time = 0.0;
     let mut rolling_volume = 0.0;
     let mut last_beat = -100.0;
@@ -93,6 +123,9 @@ fn main() {
     let mut last_beat_num = 0;
 
     let mut maxima_buf = [(0.0, 0.0); 8];
+
+    let mut previous_columns = vec![false; notes_num];
+    let mut beat_ended = true;
 
     for frame in frames.iter() {
 
@@ -107,6 +140,7 @@ fn main() {
             if info.beat != last_beat_num {
                 last_beat = frame.time;
                 last_beat_num = info.beat;
+                beat_ended = false;
             }
 
             let notes_spectrum = info.spectrum.fill_spectrum(&mut notes_spectrum);
@@ -130,11 +164,29 @@ fn main() {
             )
         });
         // }}}
+            const NOTE_ON_MSG: u8 = 0x90;
+            const NOTE_OFF_MSG: u8 = 0x80;
+            const VELOCITY: u8 = 0x64;
+
+        if frame.time == last_beat {
+                conn_out.send(&[NOTE_ON_MSG, 66 as u8, VELOCITY]);
+        } else if frame.time - last_beat > 0.2 && !beat_ended {
+                conn_out.send(&[NOTE_OFF_MSG, 66 as u8, VELOCITY]);
+            beat_ended = true;
+        }
 
         let mut columns = vec![false; notes_num];
         for (f, _) in maxima.iter().take(4) {
             let note = notes_rolling_spectrum.freq_to_id(*f);
             columns[note] = true;
+        }
+
+        for (i, (prev, now)) in previous_columns.iter().copied().zip(columns.iter().copied()).enumerate() {
+            if !prev && now {
+                conn_out.send(&[NOTE_ON_MSG, 50 + i as u8, VELOCITY]);
+            } else if prev && !now {
+                conn_out.send(&[NOTE_OFF_MSG, 50 + i as u8, VELOCITY]);
+            }
         }
 
         if columns[0] {
@@ -190,6 +242,7 @@ fn main() {
         println!("\x1B[0m|");
 
         previous_time = frame.time;
+        previous_columns = columns;
 
         let end = std::time::Instant::now();
         let dur = end - start;

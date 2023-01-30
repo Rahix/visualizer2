@@ -4,4 +4,5 @@ members = [
     "spectral",
     "noambition",
     "noa-35c3",
+    "no-dmx",
 ]

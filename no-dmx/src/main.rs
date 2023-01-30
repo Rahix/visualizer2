@@ -168,12 +168,19 @@ fn main() {
             const NOTE_OFF_MSG: u8 = 0x80;
             const VELOCITY: u8 = 0x64;
 
+        let beat_dur = 0.1;
         if frame.time == last_beat {
                 conn_out.send(&[NOTE_ON_MSG, 66 as u8, VELOCITY]);
-        } else if frame.time - last_beat > 0.2 && !beat_ended {
+        } else if frame.time - last_beat > beat_dur && !beat_ended {
                 conn_out.send(&[NOTE_OFF_MSG, 66 as u8, VELOCITY]);
             beat_ended = true;
         }
+
+        let chars = if frame.time - last_beat <= beat_dur {
+            "XX"
+        } else {
+            "  "
+        };
 
         let mut columns = vec![false; notes_num];
         for (f, _) in maxima.iter().take(4) {
@@ -190,54 +197,54 @@ fn main() {
         }
 
         if columns[0] {
-            print!("\x1B[48;2;92;38;134m  ");
+            print!("\x1B[48;2;92;38;134m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[1] {
-            print!("\x1B[48;2;255;22;144m  ");
+            print!("\x1B[48;2;255;22;144m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[2] {
-            print!("\x1B[48;2;244;214;118m  ");
+            print!("\x1B[48;2;244;214;118m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[3] {
-            print!("\x1B[48;2;54;205;196m  ");
+            print!("\x1B[48;2;54;205;196m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[4] {
-            print!("\x1B[48;2;92;38;134m  ");
+            print!("\x1B[48;2;92;38;134m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[5] {
-            print!("\x1B[48;2;255;22;144m  ");
+            print!("\x1B[48;2;255;22;144m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[6] {
-            print!("\x1B[48;2;244;214;118m  ");
+            print!("\x1B[48;2;244;214;118m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[7] {
-            print!("\x1B[48;2;54;205;196m  ");
+            print!("\x1B[48;2;54;205;196m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[8] {
-            print!("\x1B[48;2;92;38;134m  ");
+            print!("\x1B[48;2;92;38;134m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         if columns[9] {
-            print!("\x1B[48;2;255;22;144m  ");
+            print!("\x1B[48;2;255;22;144m{}", chars);
         } else {
-            print!("\x1B[0m  ");
+            print!("\x1B[0m{}", chars);
         }
         println!("\x1B[0m|");
 

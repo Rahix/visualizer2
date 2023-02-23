@@ -57,7 +57,7 @@ fn main() {
 
     // Columns
     let notes_num = 10;
-    let slowdown = vis_core::CONFIG.get_or("noa.cols.slowdown", 0.995);
+    let slowdown = vis_core::CONFIG.get_or("noa.cols.slowdown", 0.95);
 
     let frame_time =
         std::time::Duration::from_micros(1000000 / vis_core::CONFIG.get_or("noa.fps", 30));
@@ -166,7 +166,7 @@ fn main() {
         // }}}
             const NOTE_ON_MSG: u8 = 0x90;
             const NOTE_OFF_MSG: u8 = 0x80;
-            const VELOCITY: u8 = 0x64;
+            const VELOCITY: u8 = 0x7f;
 
         let beat_dur = 0.1;
         if frame.time == last_beat {
@@ -246,7 +246,17 @@ fn main() {
         } else {
             print!("\x1B[0m{}", chars);
         }
-        println!("\x1B[0m|");
+        print!("\x1B[0m| ");
+
+        let vol = ((rolling_volume / 0.20).min(1.0).powi(2).max(0.15) * 127.0) as u8;
+        for _ in 0..(vol / 2) {
+            print!("=");
+        }
+
+        println!("");
+
+        conn_out.send(&[NOTE_ON_MSG, 70 as u8, vol]);
+
 
         previous_time = frame.time;
         previous_columns = columns;

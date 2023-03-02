@@ -164,19 +164,24 @@ fn main() {
             )
         });
         // }}}
-            const NOTE_ON_MSG: u8 = 0x90;
-            const NOTE_OFF_MSG: u8 = 0x80;
-            const VELOCITY: u8 = 0x7f;
+
+        const NOTE_ON_MSG: u8 = 0x90;
+        const NOTE_OFF_MSG: u8 = 0x80;
+        const VELOCITY: u8 = 0x7f;
+
+        let vol_float = (rolling_volume / 0.20).min(1.0).powi(2).max(0.15);
+        let vol = (vol_float * 127.0) as u8;
+        conn_out.send(&[NOTE_ON_MSG, 70 as u8, vol]);
 
         let beat_dur = 0.1;
-        if frame.time == last_beat {
-                conn_out.send(&[NOTE_ON_MSG, 66 as u8, VELOCITY]);
+        if frame.time == last_beat && vol_float != 0.15 {
+            conn_out.send(&[NOTE_ON_MSG, 66 as u8, VELOCITY]);
         } else if frame.time - last_beat > beat_dur && !beat_ended {
-                conn_out.send(&[NOTE_OFF_MSG, 66 as u8, VELOCITY]);
+            conn_out.send(&[NOTE_OFF_MSG, 66 as u8, VELOCITY]);
             beat_ended = true;
         }
 
-        let chars = if frame.time - last_beat <= beat_dur {
+        let chars = if frame.time - last_beat <= beat_dur && vol_float != 0.15 {
             "XX"
         } else {
             "  "
@@ -248,14 +253,12 @@ fn main() {
         }
         print!("\x1B[0m| ");
 
-        let vol = ((rolling_volume / 0.20).min(1.0).powi(2).max(0.15) * 127.0) as u8;
         for _ in 0..(vol / 2) {
             print!("=");
         }
 
         println!("");
 
-        conn_out.send(&[NOTE_ON_MSG, 70 as u8, vol]);
 
 
         previous_time = frame.time;

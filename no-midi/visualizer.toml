@@ -3,7 +3,7 @@ window = "nuttall"
 conversions = 300
 rate = 8000
 read_size = 256
-recorder = "pulse"
+recorder = "cpal"
 
 [noa]
 fps = 40

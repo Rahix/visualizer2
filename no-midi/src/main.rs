@@ -84,40 +84,42 @@ fn main() {
 
     // }}}
 
-    let midi_out = MidiOutput::new("My Test Output").unwrap();
+    let midi_out = MidiOutput::new("no-midi Music Visualizer").unwrap();
 
     // Get an output port (read from console if multiple are available)
     let out_ports = midi_out.ports();
     let out_port: &MidiOutputPort = match out_ports.len() {
-        0 => panic!("no output port found"),
-        1 => {
-            println!("Choosing the only available output port: {}", midi_out.port_name(&out_ports[0]).unwrap());
-            &out_ports[0]
-        },
+        0 => panic!("no MIDI output port found"),
         _ => {
-            println!("\nAvailable output ports:");
-            for (i, p) in out_ports.iter().enumerate() {
-                println!("{}: {}", i, midi_out.port_name(p).unwrap());
+            log::debug!("Available output ports:");
+            for p in out_ports.iter() {
+                log::debug!(" - {}", midi_out.port_name(p).unwrap());
             }
-            print!("Please select output port: ");
-            stdout().flush().unwrap();
-            let mut input = String::new();
-            stdin().read_line(&mut input).unwrap();
-            out_ports.get(input.trim().parse::<usize>().unwrap())
-                     .ok_or("invalid output port selected").unwrap()
+
+            if let Some(want_port) = vis_core::CONFIG.get::<String>("midi.output_port") {
+                let mut out_port = None;
+                for p in out_ports.iter() {
+                    if want_port == midi_out.port_name(p).unwrap() {
+                        log::debug!("Chose wanted MIDI output port {:?}", want_port);
+                        out_port = Some(p);
+                    }
+                }
+                out_port.unwrap_or_else(|| {
+                    panic!("Wanted MIDI output port {:?} not found!", want_port)
+                })
+            } else {
+                log::debug!("Choosing MIDI port {:?}", midi_out.port_name(&out_ports[0]));
+                &out_ports[0]
+            }
         }
     };
-
-    println!("\nOpening connection");
     let mut conn_out = midi_out.connect(out_port, "midir-test").unwrap();
-    println!("Connection open. Listen!");
 
     let mut previous_time = 0.0;
     let mut rolling_volume = 0.0;
     let mut last_beat = -100.0;
 
     let mut notes_spectrum = analyzer::Spectrum::new(vec![0.0; notes_num], 220.0, 660.0);
-    dbg!(&notes_spectrum);
     let mut notes_rolling_buf = vec![0.0; notes_num];
 
     let mut last_beat_num = 0;

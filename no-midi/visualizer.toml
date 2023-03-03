@@ -5,6 +5,11 @@ rate = 8000
 read_size = 256
 recorder = "cpal"
 
+[midi]
+# If you want to select a specific port:
+#
+# output_port = "Midi Through:Midi Through Port-0 14:0"
+
 [noa]
 fps = 40
 

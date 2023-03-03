@@ -1,6 +1,6 @@
 [package]
 authors = ["Rahix <rahix@rahix.de>"]
-edition = "2018"
+edition = "2021"
 name = "vis-core"
 version = "0.1.0"
 
@@ -16,8 +16,7 @@ triple_buffer = "6.2.0"
 
 [dependencies.cpal]
 optional = true
-git = "https://github.com/tomaka/cpal"
-rev = "0354548426f7b4c48392cae9876a3e77ea5c1c40"
+version = "0.15.0"
 
 [dependencies.pulse-simple]
 optional = true

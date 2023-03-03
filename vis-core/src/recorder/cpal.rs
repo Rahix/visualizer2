@@ -1,5 +1,6 @@
 use crate::analyzer;
 use std::thread;
+use cpal::traits::*;
 
 #[derive(Debug, Default)]
 pub struct CPalBuilder {
@@ -65,49 +66,48 @@ impl CPalRecorder {
             thread::Builder::new()
                 .name("cpal-recorder".into())
                 .spawn(move || {
-                    let device = cpal::default_input_device().expect("Can't acquire input device");
+                    let host = cpal::default_host();
+                    let device = host.default_input_device().expect("Can't acquire input device");
 
-                    let format = cpal::Format {
+                    let config = cpal::StreamConfig {
                         channels: 2,
                         sample_rate: cpal::SampleRate(rate as u32),
-                        data_type: cpal::SampleFormat::F32,
+                        buffer_size: cpal::BufferSize::Fixed(read_size as u32),
                     };
 
-                    let event_loop = cpal::EventLoop::new();
-                    let stream_id = event_loop
-                        .build_input_stream(&device, &format)
-                        .expect("Failed to build input stream");
-                    event_loop.play_stream(stream_id);
+                    let stream = device.build_input_stream_raw(
+                        &config,
+                        cpal::SampleFormat::F32,
+                        move |data, _info| {
+                            let slice = data.as_slice::<f32>().expect("Wrong sample buffer data type!");
+                            for chunk in slice.chunks(chunk_buffer.len() * 2) {
+                                let len = chunk.len() / 2;
+                                for p in chunk_buffer.iter_mut().zip(chunk.chunks_exact(2)) {
+                                    match p {
+                                        (b, [l, r]) => *b = [*l, *r],
+                                        _ => unreachable!(),
+                                    }
+                                }
+                                buf.push(&chunk_buffer[..len]);
+                            }
+                        },
+                        |err| {
+                            panic!("Stream Error: {err:?}");
+                        },
+                        None,
+                    ).expect("Failed to build input stream");
 
                     log::debug!("CPal:");
                     log::debug!("    Sample Rate = {:6}", rate);
                     log::debug!("    Read Size   = {:6}", read_size);
                     log::debug!("    Buffer Size = {:6}", buffer_size);
-                    log::debug!("    Device      = \"{}\"", device.name());
+                    log::debug!("    Device      = \"{}\"", device.name().as_deref().unwrap_or("unknown"));
 
-                    event_loop.run(|_, data| match data {
-                        cpal::StreamData::Input {
-                            buffer: cpal::UnknownTypeInputBuffer::F32(buffer),
-                        } => {
-                            for chunk in buffer.chunks(chunk_buffer.len() * 2) {
-                                let len = chunk.len() / 2;
+                    stream.play().unwrap();
 
-                                for ref mut p in chunk_buffer.iter_mut().zip(chunk.chunks_exact(2))
-                                {
-                                    match p {
-                                        (ref mut b, [l, r]) => **b = [*l, *r],
-                                        _ => unreachable!(),
-                                    }
-                                }
-
-                                buf.push(&chunk_buffer[..len]);
-                            }
-                        }
-                        cpal::StreamData::Input { .. } => {
-                            panic!("Buffer type does not match configuration!");
-                        }
-                        cpal::StreamData::Output { .. } => (),
-                    });
+                    loop {
+                        std::thread::park();
+                    }
                 })
                 .unwrap();
         }

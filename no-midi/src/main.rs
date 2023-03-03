@@ -153,7 +153,8 @@ fn main() {
         const NOTE_OFF_MSG: u8 = 0x80;
         const VELOCITY: u8 = 0x7f;
 
-        let vol_float = (rolling_volume / 0.20).min(1.0).powi(2).max(0.15);
+        // let vol_float = (rolling_volume.powf(0.5) / 0.50).min(1.0).powi(2).max(0.15);
+        let vol_float = (((rolling_volume / 0.18).powf(0.6) - 0.2) / 0.8).min(1.0).max(0.15);
         let vol = (vol_float * 127.0) as u8;
         conn_out.send(&[NOTE_ON_MSG, 70 as u8, vol]).unwrap();
 
@@ -237,9 +238,15 @@ fn main() {
         }
         print!("\x1B[0m| ");
 
-        for _ in 0..(vol / 2) {
-            print!("=");
+        for i in 0..64 {
+            if i < vol /2 {
+                print!("=");
+            } else {
+                print!(" ");
+            }
         }
+
+        print!(" {vol_float:5.3}");
 
         println!("");
 

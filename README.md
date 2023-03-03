@@ -16,6 +16,11 @@ Version of *noambition* that was adapted for 35c3.
 
 ![noa-35c3 preview](img/noa-35c3.png)
 
+### no-midi
+A visualizer which sends MIDI commands.  These MIDI commands can be fed into a lighting controller to then control fancy event lighting equipment.
+
+Check the [no-midi README](./no-midi/README.md) for more info.
+
 ### spectral
 A debug spectral display.
 

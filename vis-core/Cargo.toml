@@ -5,13 +5,14 @@ name = "vis-core"
 version = "0.1.0"
 
 [dependencies]
-apodize = "0.3.1"
-env_logger = "0.6.0"
+apodize = "1.0.0"
+env_logger = "0.10.0"
 ezconf = "0.3.0"
-log = "0.4.6"
-parking_lot = "0.7.0"
-rustfft = "2.1.0"
-color-backtrace = "0.1.3"
+log = "0.4.17"
+parking_lot = "0.12.1"
+rustfft = "6.1.0"
+color-backtrace = "0.5.1"
+triple_buffer = "6.2.0"
 
 [dependencies.cpal]
 optional = true
@@ -21,10 +22,6 @@ rev = "0354548426f7b4c48392cae9876a3e77ea5c1c40"
 [dependencies.pulse-simple]
 optional = true
 version = "1.0.1"
-
-[dependencies.triple_buffer]
-features = ["raw"]
-version = "4.0.0"
 
 [features]
 default = ["cpalrecord"]

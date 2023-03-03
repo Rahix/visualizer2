@@ -195,7 +195,7 @@ pub struct FourierAnalyzer {
     lowest: analyzer::Frequency,
     highest: analyzer::Frequency,
 
-    fft: std::sync::Arc<dyn rustfft::FFT<Sample>>,
+    fft: std::sync::Arc<dyn rustfft::Fft<Sample>>,
 
     input: [Vec<rustfft::num_complex::Complex<Sample>>; 2],
     output: Vec<rustfft::num_complex::Complex<Sample>>,
@@ -218,7 +218,7 @@ impl FourierAnalyzer {
     fn new(length: usize, window: Vec<f32>, downsample: usize, rate: usize) -> FourierAnalyzer {
         use rustfft::num_traits::Zero;
 
-        let fft = rustfft::FFTplanner::new(false).plan_fft(length);
+        let fft = rustfft::FftPlanner::new().plan_fft_forward(length);
         let buckets = length / 2;
 
         let downsampled_rate = rate as f32 / downsample as f32;
@@ -309,12 +309,14 @@ impl FourierAnalyzer {
         debug_assert_eq!(self.input[0].len(), self.window.len());
         debug_assert_eq!(self.input[1].len(), self.window.len());
 
-        self.fft.process(&mut self.input[0], &mut self.output);
+        self.output.copy_from_slice(&self.input[0]);
+        self.fft.process(&mut self.output);
         for (s, o) in self.spectra[0].iter_mut().zip(self.output.iter()) {
             *s = o.norm_sqr();
         }
 
-        self.fft.process(&mut self.input[1], &mut self.output);
+        self.output.copy_from_slice(&self.input[1]);
+        self.fft.process(&mut self.output);
         for (s, o) in self.spectra[1].iter_mut().zip(self.output.iter()) {
             *s = o.norm_sqr();
         }

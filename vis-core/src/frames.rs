@@ -59,7 +59,7 @@ where
     for<'r> A: FnMut(&'r mut R, &analyzer::SampleBuffer) -> &'r mut R + Send + 'static,
 {
     pub fn from_vis(vis: crate::Visualizer<R, A>) -> Frames<R, A> {
-        let (inp, outp) = triple_buffer::TripleBuffer::new(vis.initial).split();
+        let (inp, outp) = triple_buffer::TripleBuffer::new(&vis.initial).split();
         let mut f = Frames {
             info: rc::Rc::new(cell::RefCell::new(outp)),
             analyzer: Some((vis.analyzer, inp)),
@@ -93,8 +93,8 @@ where
             .name("analyzer".into())
             .spawn(move || loop {
                 let start = std::time::Instant::now();
-                analyzer(info.raw_input_buffer(), &buffer);
-                info.raw_publish();
+                analyzer(info.input_buffer(), &buffer);
+                info.publish();
 
                 let now = std::time::Instant::now();
                 let duration = now - start;
@@ -141,8 +141,8 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some((ref mut analyzer, ref mut info)) = self.visualizer.analyzer {
-            analyzer(info.raw_input_buffer(), &self.buffer);
-            info.raw_publish();
+            analyzer(info.input_buffer(), &self.buffer);
+            info.publish();
         }
 
         let frame = self.frame;

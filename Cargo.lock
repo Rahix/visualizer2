@@ -1522,7 +1522,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "no-dmx"
+name = "no-midi"
 version = "0.1.0"
 dependencies = [
  "log",

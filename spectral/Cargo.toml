@@ -5,8 +5,8 @@ name = "spectral"
 version = "0.1.0"
 
 [dependencies]
-log = "0.4.6"
-sfml = "0.14.0"
+log = "0.4.17"
+sfml = "0.20.0"
 
 [dependencies.vis-core]
 optional = false

@@ -519,46 +519,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
-name = "csfml-audio-sys"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3f55bfdd00e6ded8b4bbf62acfe7e62a493584a7b0774642dac59d822061aa4"
-dependencies = [
- "csfml-system-sys",
- "sfml-build",
-]
-
-[[package]]
-name = "csfml-graphics-sys"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d508c34b7376ca0450422ee11642b5aba43bde59673c822bb436e9fc126d8487"
-dependencies = [
- "csfml-system-sys",
- "csfml-window-sys",
- "sfml-build",
-]
-
-[[package]]
-name = "csfml-system-sys"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "226869ac0651d7592d2fc0795f5e44101fbd7b22548d6cf6f0e0e74e54efa1fd"
-dependencies = [
- "sfml-build",
-]
-
-[[package]]
-name = "csfml-window-sys"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86fd0d9840a9f92ae0960cef634c1b5781b15847dbb099a9ee6021bb5c1cb618"
-dependencies = [
- "csfml-system-sys",
- "sfml-build",
-]
-
-[[package]]
 name = "cty"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1207,6 +1167,15 @@ dependencies = [
  "num-traits",
  "pkg-config",
  "winapi",
+]
+
+[[package]]
+name = "link-cplusplus"
+version = "1.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ecd207c9c713c34f95a097a5b029ac2ce6010530c7b49d7fea24d977dede04f5"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
@@ -2198,22 +2167,17 @@ dependencies = [
 
 [[package]]
 name = "sfml"
-version = "0.14.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47b06f9db4d3f8b936d232d92bfbd6335060ae51ddcf1be2e79361aeb5c8fef1"
+checksum = "cc90f712d9a93d8db54e53281dbb6dbb29e443abcc83e185df4bbe60ba6e8311"
 dependencies = [
  "bitflags",
- "csfml-audio-sys",
- "csfml-graphics-sys",
- "csfml-system-sys",
- "csfml-window-sys",
+ "cc",
+ "link-cplusplus",
+ "num-traits",
+ "once_cell 1.17.1",
+ "widestring",
 ]
-
-[[package]]
-name = "sfml-build"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff35ae173aff95bc967d1b4f0e131a8aec384c317fd057738da4b0f71c8cf841"
 
 [[package]]
 name = "shared_library"
@@ -2724,6 +2688,12 @@ dependencies = [
  "bytemuck",
  "safe_arch 0.6.0",
 ]
+
+[[package]]
+name = "widestring"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "653f141f39ec16bba3c5abe400a0c60da7468261cc2cbf36805022876bc721a8"
 
 [[package]]
 name = "winapi"

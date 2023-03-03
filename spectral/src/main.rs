@@ -29,21 +29,22 @@ fn main() {
         &context_settings,
     );
     window.set_vertical_sync_enabled(true);
-    window.clear(&graphics::Color::BLACK);
+    window.clear(graphics::Color::BLACK);
     window.display();
 
-    let view = graphics::View::from_rect(&graphics::Rect::new(0.0, 0.0, 1.0, LINES as f32));
+    let view = graphics::View::from_rect(graphics::Rect::new(0.0, 0.0, 1.0, LINES as f32));
     window.set_view(&view);
 
-    let mut texture = graphics::Texture::new(1600, 800).unwrap();
+    let mut texture = graphics::Texture::new().unwrap();
+    assert!(texture.create(1600, 800));
 
     let mut rectangle = graphics::RectangleShape::new();
     rectangle.set_size(system::Vector2f::new(1.0 / BUCKETS as f32, 1.0));
 
     // Analyzer {{{
     let mut frames = {
-        let mut analyzer = analyzer::FourierBuilder::new().plan();
-        let mut average = analyzer::Spectrum::new(vec![0.0; analyzer.buckets()], 0.0, 1.0);
+        let analyzer = analyzer::FourierBuilder::new().plan();
+        let average = analyzer::Spectrum::new(vec![0.0; analyzer.buckets()], 0.0, 1.0);
 
         // Beat
         let mut beat = analyzer::BeatBuilder::new().build();
@@ -93,8 +94,11 @@ fn main() {
         {
             use sfml::graphics::Transformable;
 
-            texture.update_from_render_window(&window, 0, 0);
-            window.clear(&graphics::Color::BLACK);
+            // SAFETY: Pray for the best.
+            unsafe {
+                texture.update_from_render_window(&window, 0, 0);
+            }
+            window.clear(graphics::Color::BLACK);
             let mut rect_img = graphics::RectangleShape::with_texture(&texture);
             rect_img.set_size(system::Vector2f::new(1.0, LINES as f32));
             rect_img.set_position(system::Vector2f::new(0.0, -1.0));
@@ -110,7 +114,7 @@ fn main() {
 
             let beat = if info.beat > last_beat {
                 last_beat = info.beat;
-                rectangle.set_fill_color(&graphics::Color::rgb(255, 255, 255));
+                rectangle.set_fill_color(graphics::Color::rgb(255, 255, 255));
                 true
             } else {
                 false
@@ -121,9 +125,9 @@ fn main() {
 
                 let int = ((b / max).sqrt() * 255.0) as u8;
                 if !beat {
-                    rectangle.set_fill_color(&graphics::Color::rgb(int, int, int));
+                    rectangle.set_fill_color(graphics::Color::rgb(int, int, int));
                     if i == n50 || i == n100 {
-                        rectangle.set_fill_color(&graphics::Color::rgb(255, 0, 0));
+                        rectangle.set_fill_color(graphics::Color::rgb(255, 0, 0));
                     }
                 }
                 rectangle.set_position(system::Vector2f::new(
@@ -135,6 +139,6 @@ fn main() {
         });
 
         window.display();
-        std::thread::sleep_ms(10);
+        std::thread::sleep(std::time::Duration::from_millis(10));
     }
 }

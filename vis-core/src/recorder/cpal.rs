@@ -39,6 +39,7 @@ impl CPalBuilder {
 
 #[derive(Debug)]
 pub struct CPalRecorder {
+    #[allow(unused)]
     rate: usize,
     buffer: analyzer::SampleBuffer,
 }

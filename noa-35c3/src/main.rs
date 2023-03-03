@@ -339,10 +339,10 @@ fn main() {
     // Image {{{
     let image = image::load(
         std::io::Cursor::new(&include_bytes!("logo.png")[..]),
-        image::PNG,
+        image::ImageFormat::Png,
     )
     .unwrap()
-    .to_rgba();
+    .to_rgba8();
     let image_dims = image.dimensions();
     let image = glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dims);
     let c3_texture = glium::texture::CompressedSrgbTexture2d::new(&display, image).unwrap();

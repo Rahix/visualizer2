@@ -5,11 +5,11 @@ name = "noa-35c3"
 version = "0.1.0"
 
 [dependencies]
-glium = "0.29.1"
-image = "0.20.1"
-log = "0.4.6"
-nalgebra = "0.16.9"
-rand = "0.6.0-pre.1"
+glium = "0.32.1"
+image = "0.24.5"
+log = "0.4.17"
+nalgebra = "0.32.1"
+rand = "0.8.5"
 
 [dependencies.vis-core]
 optional = false

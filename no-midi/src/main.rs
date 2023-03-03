@@ -2,7 +2,7 @@
 extern crate log;
 extern crate nalgebra as na;
 use midir::{MidiOutput, MidiOutputPort};
-use std::io::{stdin, stdout, Write};
+
 
 use vis_core::analyzer;
 
@@ -62,24 +62,6 @@ fn main() {
     let frame_time =
         std::time::Duration::from_micros(1000000 / vis_core::CONFIG.get_or("noa.fps", 30));
 
-    // Colors
-    let colors: Vec<[f32; 4]> = vis_core::CONFIG.get_or(
-        "noa.cols.colors",
-        vec![
-            [1.0, 0.007443, 0.318893, 1.0],
-            [0.915586, 0.704283, 0.214133, 1.0],
-            [0.044844, 0.64629, 0.590788, 1.0],
-            [0.130165, 0.022207, 0.27614, 1.0],
-            [1.0, 0.007443, 0.318893, 1.0],
-            [0.915586, 0.704283, 0.214133, 1.0],
-            [0.044844, 0.64629, 0.590788, 1.0],
-            [0.130165, 0.022207, 0.27614, 1.0],
-            [1.0, 0.007443, 0.318893, 1.0],
-            [0.915586, 0.704283, 0.214133, 1.0],
-            [0.044844, 0.64629, 0.590788, 1.0],
-            [0.130165, 0.022207, 0.27614, 1.0],
-        ],
-    );
     let note_roll_size = vis_core::CONFIG.get_or("noa.cols.note_roll", 20) as f32;
 
     // }}}
@@ -136,7 +118,7 @@ fn main() {
         trace!("Delta: {}s", delta);
 
         // Audio Info Retrieval {{{
-        let (volume, maxima, notes_rolling_spectrum, base_volume) = frame.info(|info| {
+        let (_volume, maxima, notes_rolling_spectrum, _base_volume) = frame.info(|info| {
             rolling_volume = info.volume.max(rolling_volume * slowdown);
 
             if info.beat != last_beat_num {
@@ -173,13 +155,13 @@ fn main() {
 
         let vol_float = (rolling_volume / 0.20).min(1.0).powi(2).max(0.15);
         let vol = (vol_float * 127.0) as u8;
-        conn_out.send(&[NOTE_ON_MSG, 70 as u8, vol]);
+        conn_out.send(&[NOTE_ON_MSG, 70 as u8, vol]).unwrap();
 
         let beat_dur = 0.1;
         if frame.time == last_beat && vol_float != 0.15 {
-            conn_out.send(&[NOTE_ON_MSG, 66 as u8, VELOCITY]);
+            conn_out.send(&[NOTE_ON_MSG, 66 as u8, VELOCITY]).unwrap();
         } else if frame.time - last_beat > beat_dur && !beat_ended {
-            conn_out.send(&[NOTE_OFF_MSG, 66 as u8, VELOCITY]);
+            conn_out.send(&[NOTE_OFF_MSG, 66 as u8, VELOCITY]).unwrap();
             beat_ended = true;
         }
 
@@ -197,9 +179,9 @@ fn main() {
 
         for (i, (prev, now)) in previous_columns.iter().copied().zip(columns.iter().copied()).enumerate() {
             if !prev && now {
-                conn_out.send(&[NOTE_ON_MSG, 50 + i as u8, VELOCITY]);
+                conn_out.send(&[NOTE_ON_MSG, 50 + i as u8, VELOCITY]).unwrap();
             } else if prev && !now {
-                conn_out.send(&[NOTE_OFF_MSG, 50 + i as u8, VELOCITY]);
+                conn_out.send(&[NOTE_OFF_MSG, 50 + i as u8, VELOCITY]).unwrap();
             }
         }
 

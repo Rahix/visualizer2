@@ -173,7 +173,7 @@ fn main() {
         };
 
         let mut columns = vec![false; notes_num];
-        for (f, _) in maxima.iter().take(4) {
+        for (f, _) in maxima.iter().take(3) {
             let note = notes_rolling_spectrum.freq_to_id(*f);
             columns[note] = true;
         }
